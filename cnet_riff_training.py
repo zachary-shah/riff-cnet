@@ -7,6 +7,9 @@ from cldm.logger import ImageLogger
 from cldm.model import create_model, load_state_dict
 from cnet_riff_dataset import CnetRiffDataset
 
+# import os
+# os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:512"
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -82,7 +85,7 @@ def main():
 
     # make logger and model trainer
     logger = ImageLogger(batch_frequency=logger_freq)
-    trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger], accumulate_grad_batches=accumulate_gradient_batches)
+    trainer = pl.Trainer(gpus=1, precision=16, callbacks=[logger], accumulate_grad_batches=accumulate_gradient_batches)
 
     # Train!
     trainer.fit(model, dataloader)
