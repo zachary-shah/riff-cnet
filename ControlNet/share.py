@@ -1,8 +1,8 @@
-import config
 from ControlNet.cldm.hack import disable_verbosity, enable_sliced_attention
 
+save_memory = False
 
 disable_verbosity()
 
-if config.save_memory:
+if save_memory:
     enable_sliced_attention()
