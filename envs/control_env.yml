@@ -34,4 +34,3 @@ dependencies:
       - safetensors==0.2.7
       - basicsr==1.4.2
       - huggingface_hub
-      - spleeter==2.3.3
