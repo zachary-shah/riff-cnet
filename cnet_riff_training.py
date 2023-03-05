@@ -60,6 +60,14 @@ def main():
     )
 
     parser.add_argument(
+        "--download_riff",
+        type=bool,
+        nargs="?",
+        default="False",
+        help="True to manually download riffusion model from hugginface."
+    ) 
+
+    parser.add_argument(
         "--sd_locked",
         type=bool,
         nargs="?",
@@ -74,7 +82,7 @@ def main():
 
     # add control to riffusion and save controlled model to cntrl_riff_path
     cntrl_riff_path = "./models/control_riffusion_ini.ckpt"
-    tool_add_control(riffusion_path, cntrl_riff_path)
+    tool_add_control.tool_add_control(riffusion_path, cntrl_riff_path)
 
     # Configs
     batch_size = 4
