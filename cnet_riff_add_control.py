@@ -48,7 +48,7 @@ def tool_add_control(input_path, output_path):
 def main():
     
     cntrl_riff_path = "./models/control_riffusion_ini.ckpt"
-    os.makedirs('model', exist_ok=True)
+    os.makedirs('models', exist_ok=True)
 
     riffusion_path = hf_hub_download(repo_id="riffusion/riffusion-model-v1", filename="riffusion-model-v1.ckpt")
     print(F"Riffusion .ckpt saved to {riffusion_path}")
