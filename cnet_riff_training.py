@@ -7,8 +7,7 @@ from cldm.logger import ImageLogger
 from cldm.model import create_model, load_state_dict
 from cnet_riff_dataset import CnetRiffDataset
 
-# import os
-# os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:512"
+import os
 
 def main():
     parser = argparse.ArgumentParser()
@@ -54,6 +53,13 @@ def main():
         default=1,
         help="If batch size = 1, then make accumulate_gradient_batches = 4."
     )
+    parser.add_argument(
+        "--max_split_size",
+        type=int,
+        nargs="?",
+        default=512,
+        help="for cuda splits."
+    )
     args = parser.parse_args()
 
     # Configs
@@ -63,6 +69,8 @@ def main():
     batch_size = args.batch_size
     train_data_dir = args.train_data_dir
     accumulate_gradient_batches = args.accumulate_gradient_batches
+    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = f"max_split_size_mb:{args.max_split_size}"
+
 
     # DEFAULT IS TRUE. but reccomend trying false for unique image types. but then lower LR to 2e-6
     if args.sd_locked:
