@@ -1,7 +1,9 @@
 
 import numpy as np
 import librosa
-import os, sys, argparse
+import os, sys, argparse, json
+import cv2
+from torch.utils.data import Dataset
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from huggingface_hub import hf_hub_download
@@ -10,7 +12,42 @@ from ControlNet import tool_add_control
 from ControlNet.cldm.logger import ImageLogger
 from ControlNet.cldm.model import create_model, load_state_dict
 
-from cnet_riff_dataset import CnetRiffDataset
+
+class CnetRiffDataset(Dataset):
+    def __init__(self, rootdir):
+        self.data = []
+        self.rootdir = rootdir
+        with open(os.path.join(rootdir, 'prompt.json'), 'rt') as f:
+            for line in f:
+                self.data.append(json.loads(line))
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        item = self.data[idx]
+
+        source_filename = item['source']
+        target_filename = item['target']
+        prompt = item['prompt']
+
+        source = cv2.imread(source_filename)
+        target = cv2.imread(target_filename)
+        
+        # # Do not forget that OpenCV read images in BGR order.
+        source_mod = cv2.cvtColor(source, cv2.COLOR_BGR2RGB)
+        target_mod = cv2.cvtColor(target, cv2.COLOR_BGR2RGB)
+
+        # # Normalize source images to [0, 1].
+        source_mod = source_mod.astype(np.float32) / 255.0
+
+        # # Normalize target images to [-1, 1].
+        target = (target_mod.astype(np.float32) / 127.5) - 1.0
+
+        #TODO: fix normalizations or undo later
+
+        return dict(jpg=target, txt=prompt, hint=source)
+
 
 def main():
     # names of files to segment
