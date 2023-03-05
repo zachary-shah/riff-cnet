@@ -75,7 +75,6 @@ def main():
         help="False loads control model from ckpt without adding control again"
     ) 
     
-    
     args = parser.parse_args()
     
     cntrl_riff_path = "./models/control_riffusion_ini.ckpt"
@@ -88,9 +87,12 @@ def main():
         tool_add_control.tool_add_control(riffusion_path, cntrl_riff_path)
 
     # Configs
-    batch_size = 4
+    #batch_size = 4
     logger_freq = 300
     only_mid_control = False
+
+    # Configs
+    batch_size = 1
 
     # DEFAULT IS TRUE. but reccomend trying false for unique image types. but then lower LR to 2e-6
     if args.sd_locked:
@@ -111,7 +113,10 @@ def main():
     dataset = CnetRiffDataset(args.train_data_dir)
     dataloader = DataLoader(dataset, num_workers=0, batch_size=batch_size, shuffle=True)
     logger = ImageLogger(batch_frequency=logger_freq)
-    trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger])
+    #trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger])
+    
+    # to prevent cuda out of memory issue
+    trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger], accumulate_grad_batches=4)
 
     # Train!
     trainer.fit(model, dataloader)
