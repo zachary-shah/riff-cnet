@@ -78,7 +78,7 @@ def main():
 
     # load in dataset
     dataset = CnetRiffDataset(train_data_dir)
-    dataloader = DataLoader(dataset, num_workers=8, batch_size=batch_size, shuffle=True)
+    dataloader = DataLoader(dataset, num_workers=0, batch_size=batch_size, shuffle=True)
 
     # make logger and model trainer
     logger = ImageLogger(batch_frequency=logger_freq)

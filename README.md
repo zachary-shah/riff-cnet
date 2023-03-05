@@ -14,7 +14,7 @@
 3. SSH Into VM, which should already have the enviornment set up. Use git pull to pull data into VM from mel-train
 ```cd mel-train; git pull```
 
-4. Now enter the control enviornment and add control to the model:
+4. Now enter the control enviornment and download riffusion / add control to the model:
 (If environment not set up, then first run ```conda env create -f envs/control_env.yml```).
 ```conda activate control```
 ```python cnet_riff_add_control.py```
@@ -31,4 +31,7 @@ If the model is already present, this will not run, but no worries, we can still
 
 ### NOTES
 - Make sure all audio files for training located in "raw-audio" folder. Add "prompt_labels.json" file to root directory to match text prompts to each audio file in raw-audio.
+ 
+ conda env create -f envs/control_env.yml
+ conda activate control
  
