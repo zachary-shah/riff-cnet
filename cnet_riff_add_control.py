@@ -1,10 +1,11 @@
-import sys
 import os
 
 import torch
 from share import *
 from cldm.model import create_model
+from huggingface_hub import hf_hub_download
 
+# add control to model (Source: from ControlNet)
 def tool_add_control(input_path, output_path):
 
     assert os.path.exists(input_path), 'Input model does not exist.'
@@ -19,7 +20,6 @@ def tool_add_control(input_path, output_path):
             return False, ''
         return True, name[len(parent_name):]
 
-    # TODO: maybe get model from ./models/cldm_v15.yaml instead
     model = create_model(config_path='./models/cldm_v15.yaml')
 
     pretrained_weights = torch.load(input_path)
@@ -44,3 +44,17 @@ def tool_add_control(input_path, output_path):
     model.load_state_dict(target_dict, strict=True)
     torch.save(model.state_dict(), output_path)
     print('Done.')
+
+def main():
+    
+    cntrl_riff_path = "./models/control_riffusion_ini.ckpt"
+    os.makedirs('model', exist_ok=True)
+
+    riffusion_path = hf_hub_download(repo_id="riffusion/riffusion-model-v1", filename="riffusion-model-v1.ckpt")
+    print(F"Riffusion .ckpt saved to {riffusion_path}")
+    # add control to riffusion and save controlled model to cntrl_riff_path
+    tool_add_control(riffusion_path, cntrl_riff_path)
+    print(f"Control added to riffusion! Model saved to {cntrl_riff_path}")
+
+if __name__ ==  '__main__':
+    main()

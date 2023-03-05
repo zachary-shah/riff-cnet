@@ -20,7 +20,6 @@ sys.path.append('../riffusion-reference/')
 from riffusion.spectrogram_image_converter import SpectrogramImageConverter
 from riffusion.spectrogram_params import SpectrogramParams
 
-
 def audio_to_images_batch(
     audio_segment_arr: np.ndarray,
     audio_paths: list,

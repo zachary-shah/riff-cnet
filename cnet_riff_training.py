@@ -1,60 +1,14 @@
 
-import numpy as np
-import os, sys, argparse, json
-import cv2
-from torch.utils.data import Dataset
+import argparse
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
-from huggingface_hub import hf_hub_download
 
-import tool_add_control
 from cldm.logger import ImageLogger
 from cldm.model import create_model, load_state_dict
-
-# training dataset built off reference data with the following structure
-# <rootdir>: fullfile path that contains:
-    # prompt.json --> list of json files in the form {"source": "imgpath", "target": "targetpath", "prompt":, "prompt-str"}
-    # source --> folder with canny edge detection spectrograms
-    # target --> folder with full audio spectrograms
-class CnetRiffDataset(Dataset):
-    def __init__(self, rootdir):
-        self.data = []
-        self.rootdir = rootdir
-        with open(os.path.join(rootdir, 'prompt.json'), 'rt') as f:
-            for line in f:
-                self.data.append(json.loads(line))
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        item = self.data[idx]
-
-        source_filename = item['source']
-        target_filename = item['target']
-        prompt = item['prompt']
-
-        source = cv2.imread(source_filename)
-        target = cv2.imread(target_filename)
-        
-        # # Do not forget that OpenCV read images in BGR order.
-        source_mod = cv2.cvtColor(source, cv2.COLOR_BGR2RGB)
-        target_mod = cv2.cvtColor(target, cv2.COLOR_BGR2RGB)
-
-        # # Normalize source images to [0, 1].
-        source_mod = source_mod.astype(np.float32) / 255.0
-
-        # # Normalize target images to [-1, 1].
-        target = (target_mod.astype(np.float32) / 127.5) - 1.0
-
-        #TODO: fix normalizations or undo later
-
-        return dict(jpg=target, txt=prompt, hint=source)
+from cnet_riff_dataset import CnetRiffDataset
 
 def main():
-    # names of files to segment
     parser = argparse.ArgumentParser()
-
     parser.add_argument(
         "--train_data_dir",
         type=str,
@@ -62,7 +16,6 @@ def main():
         default="train-data/",
         help="directory to read training dataset from"
     )
-
     parser.add_argument(
         "--sd_locked",
         type=bool,
@@ -70,29 +23,43 @@ def main():
         default=True,
         help="False to unlock part of model that might make it easier to learn unique image types, but risk corrupting model weights."
     ) 
-
     parser.add_argument(
-        "--add_control",
-        type=bool,
+        "--logger_freq",
+        type=int,
+        nargs="?",
+        default=300,
+        help="Step Frequency for logger to save images."
+    ) 
+    parser.add_argument(
+        "--only_mid_control",
+        type=int,
         nargs="?",
         default=False,
-        help="False loads control model from ckpt without adding control again"
-    ) 
-    
+        help="True to limit control to only the middle layers of model."
+    )
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        nargs="?",
+        default=4,
+        help="Batch size for dataloader. 4 is default, but lower to 1 if encountering CUDA OOM issues."
+    )
+    parser.add_argument(
+        "--accumulate_gradient_batches",
+        type=int,
+        nargs="?",
+        default=1,
+        help="If batch size = 1, then make accumulate_gradient_batches = 4."
+    )
     args = parser.parse_args()
-    
-    cntrl_riff_path = "./models/control_riffusion_ini.ckpt"
-
-    if args.add_control:
-        # get riffusion model downloaded 
-        riffusion_path = hf_hub_download(repo_id="riffusion/riffusion-model-v1", filename="riffusion-model-v1.ckpt")
-        print(F"Riffusion .ckpt saved to {riffusion_path}")
-        # add control to riffusion and save controlled model to cntrl_riff_path
-        tool_add_control.tool_add_control(riffusion_path, cntrl_riff_path)
 
     # Configs
-    logger_freq = 300
-    only_mid_control = False
+    cntrl_riff_path = "./models/control_riffusion_ini.ckpt"
+    logger_freq = args.logger_freq
+    only_mid_control = args.only_mid_control
+    batch_size = args.batch_size
+    train_data_dir = args.train_data_dir
+    accumulate_gradient_batches = args.accumulate_gradient_batches
 
     # DEFAULT IS TRUE. but reccomend trying false for unique image types. but then lower LR to 2e-6
     if args.sd_locked:
@@ -110,24 +77,17 @@ def main():
     model.only_mid_control = only_mid_control
 
     # load in dataset
-    dataset = CnetRiffDataset(args.train_data_dir)
+    dataset = CnetRiffDataset(train_data_dir)
+    dataloader = DataLoader(dataset, num_workers=8, batch_size=batch_size, shuffle=True)
 
-    # HIGHER MEMORY AND FASTER VERSION (consider trying low batch size w accum grad batches, but still 8 workers)
-    # batch_size = 4
-    # dataloader = DataLoader(dataset, num_workers=8, batch_size=batch_size, shuffle=True)
-    # logger = ImageLogger(batch_frequency=logger_freq)
-    # trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger])
-    
-    # LOW MEMORY VERSION to prevent cuda out of memory issue
-    batch_size = 1
-    dataloader = DataLoader(dataset, num_workers=0, batch_size=batch_size, shuffle=True)
+    # make logger and model trainer
     logger = ImageLogger(batch_frequency=logger_freq)
-    trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger], accumulate_grad_batches=4)
-
-    # TODO: make sure checkpoints being saved??
+    trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger], accumulate_grad_batches=accumulate_gradient_batches)
 
     # Train!
     trainer.fit(model, dataloader)
+
+    # TODO: make sure checkpoints being saved??
 
 if __name__ ==  '__main__':
     main()
