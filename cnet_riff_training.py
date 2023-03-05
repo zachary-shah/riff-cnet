@@ -63,7 +63,7 @@ def main():
         "--sd_locked",
         type=bool,
         nargs="?",
-        default="True",
+        default=True,
         help="False to unlock part of model that might make it easier to learn unique image types, but risk corrupting model weights."
     ) 
 
@@ -71,7 +71,7 @@ def main():
         "--add_control",
         type=bool,
         nargs="?",
-        default="False",
+        default=False,
         help="False loads control model from ckpt without adding control again"
     ) 
     
