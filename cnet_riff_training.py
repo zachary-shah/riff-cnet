@@ -7,9 +7,9 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from huggingface_hub import hf_hub_download
 
-from ControlNet import tool_add_control
-from ControlNet.cldm.logger import ImageLogger
-from ControlNet.cldm.model import create_model, load_state_dict
+import tool_add_control
+from cldm.logger import ImageLogger
+from cldm.model import create_model, load_state_dict
 
 class CnetRiffDataset(Dataset):
     def __init__(self, rootdir):
@@ -58,14 +58,6 @@ def main():
         default="train-data/",
         help="directory to read training dataset from"
     )
-
-    parser.add_argument(
-        "--download_riff",
-        type=bool,
-        nargs="?",
-        default="False",
-        help="True to manually download riffusion model from hugginface."
-    ) 
 
     parser.add_argument(
         "--sd_locked",
