@@ -11,6 +11,11 @@ import tool_add_control
 from cldm.logger import ImageLogger
 from cldm.model import create_model, load_state_dict
 
+# training dataset built off reference data with the following structure
+# <rootdir>: fullfile path that contains:
+    # prompt.json --> list of json files in the form {"source": "imgpath", "target": "targetpath", "prompt":, "prompt-str"}
+    # source --> folder with canny edge detection spectrograms
+    # target --> folder with full audio spectrograms
 class CnetRiffDataset(Dataset):
     def __init__(self, rootdir):
         self.data = []
@@ -45,7 +50,6 @@ class CnetRiffDataset(Dataset):
         #TODO: fix normalizations or undo later
 
         return dict(jpg=target, txt=prompt, hint=source)
-
 
 def main():
     # names of files to segment
@@ -87,12 +91,8 @@ def main():
         tool_add_control.tool_add_control(riffusion_path, cntrl_riff_path)
 
     # Configs
-    #batch_size = 4
     logger_freq = 300
     only_mid_control = False
-
-    # Configs
-    batch_size = 1
 
     # DEFAULT IS TRUE. but reccomend trying false for unique image types. but then lower LR to 2e-6
     if args.sd_locked:
@@ -111,12 +111,20 @@ def main():
 
     # load in dataset
     dataset = CnetRiffDataset(args.train_data_dir)
+
+    # HIGHER MEMORY AND FASTER VERSION (consider trying low batch size w accum grad batches, but still 8 workers)
+    # batch_size = 4
+    # dataloader = DataLoader(dataset, num_workers=8, batch_size=batch_size, shuffle=True)
+    # logger = ImageLogger(batch_frequency=logger_freq)
+    # trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger])
+    
+    # LOW MEMORY VERSION to prevent cuda out of memory issue
+    batch_size = 1
     dataloader = DataLoader(dataset, num_workers=0, batch_size=batch_size, shuffle=True)
     logger = ImageLogger(batch_frequency=logger_freq)
-    #trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger])
-    
-    # to prevent cuda out of memory issue
     trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger], accumulate_grad_batches=4)
+
+    # TODO: make sure checkpoints being saved??
 
     # Train!
     trainer.fit(model, dataloader)

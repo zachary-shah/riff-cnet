@@ -1,10 +1,9 @@
 import json
 import cv2
 import numpy as np
-from torch.utils.data import Dataset
 import os
 from pathlib import Path
-import librosa
+from torch.utils.data import Dataset
 
 # for spectrum generation
 from utils.audio_segment_utils import segment_audio, write_wav_file
@@ -48,6 +47,7 @@ class CnetRiffDataset(Dataset):
         target = (target_mod.astype(np.float32) / 127.5) - 1.0
 
         #TODO: fix normalizations or undo later
+        # TODO: install xformers
 
         return dict(jpg=target, txt=prompt, hint=source)
 
@@ -98,7 +98,7 @@ def preprocess_batch(audio_files, audio_files_dir, output_dir, prompt_file_path=
 
     assert prompt_file_path is not None
 
-    create_prompt_file(rootdir=output_dir)
+    #create_prompt_file(rootdir=output_dir)
     
     os.makedirs(output_dir, exist_ok=True)
     segments_dir = os.path.join(output_dir,"segment")
@@ -199,3 +199,4 @@ def preprocess_batch(audio_files, audio_files_dir, output_dir, prompt_file_path=
     if verbose:
         print("Segmentation and spectrogram generation complete.")
     return
+
