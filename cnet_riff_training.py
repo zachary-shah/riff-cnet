@@ -72,6 +72,8 @@ def main():
     # get riffusion model downloaded 
     riffusion_path = hf_hub_download(repo_id="riffusion/riffusion-model-v1", filename="riffusion-model-v1.ckpt")
 
+    print(F"Riffusion .ckpt saved to {riffusion_path}")
+
     # add control to riffusion and save controlled model to cntrl_riff_path
     cntrl_riff_path = "./models/control_riffusion_ini.ckpt"
     tool_add_control.tool_add_control(riffusion_path, cntrl_riff_path)
