@@ -62,7 +62,7 @@ def create_prompt_file(rootdir):
 # all sources and files have same prompt for now
 def append_to_prompt_file(rootdir, source_filepaths, target_filepaths, prompt, verbose=False):
 
-    with open(os.path.join(rootdir,"prompt.json"), 'w') as outfile:
+    with open(os.path.join(rootdir,"prompt.json"), 'a') as outfile:
         for i in range(len(source_filepaths)):
             packet = {
                 "source": str(source_filepaths[i]),
@@ -71,6 +71,7 @@ def append_to_prompt_file(rootdir, source_filepaths, target_filepaths, prompt, v
             }
             json.dump(packet, outfile)
             outfile.write('\n')
+    outfile.close()
     if verbose:
         print(f"Successfully generated prompts for {i} training examples")
     return
@@ -116,7 +117,8 @@ def preprocess_batch(audio_files, audio_files_dir, output_dir, prompt_file_path=
             prompt_dict[data['file']] = data['prompt']
             p_count += 1
     if verbose: print(f"Read {p_count} files from {prompt_file_path}.")
-
+    prompt_file.close()
+    
     for audio_file in audio_files:
         audio_filename = audio_file[:audio_file.index(".wav")]
 
@@ -178,7 +180,6 @@ def preprocess_batch(audio_files, audio_files_dir, output_dir, prompt_file_path=
         # turn sources into canny edges
         for path in source_save_paths:
             generate_and_replace_canny_source(path, low_thres=100, high_thres=200)
-        
         
         # get prompt for this song
         if audio_file in prompt_dict:

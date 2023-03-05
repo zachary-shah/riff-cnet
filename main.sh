@@ -6,7 +6,7 @@ conda env create -f envs/control_env.yml
 
 # run data processing script in training environment
 conda activate processing_env
-python make_cnet_dataset.py --audio_dir "raw-audio/" --train_data_dir "train-data/" --prompt_file "prompt_labels.json"
+python make_cnet_dataset.py --audio_dir "raw-audio/" --train_data_dir "train-data/" --prompt_file "prompt_labels.json" --limit 3
 conda deactivate
 
 # now run training script in training environment

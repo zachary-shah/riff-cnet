@@ -64,6 +64,7 @@ def write_wav_file(audio_data, file_path, fs, verbose=False):
 
         # Write the audio data to the file
         wave_file.writeframes(audio_data.tobytes())
+    wave_file.close()
     
     if verbose:
         print(f"Saved audio file at {file_path} with sampling rate {fs} and length {len(audio_data) / fs:.2f} seconds.")

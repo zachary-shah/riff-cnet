@@ -38,15 +38,23 @@ def main():
         "--limit",
         type=int, 
         nargs="?",
-        default="-1",
+        default=-1,
         help="limit of number of files to process. -1 for no limit"
+    ) 
+
+    parser.add_argument(
+        "--start_ind",
+        type=int, 
+        nargs="?",
+        default=0,
+        help="index of audio files to start at"
     ) 
 
     parser.add_argument(
         "--show_sample",
         type=bool,
         nargs="?",
-        default="False",
+        default=False,
         help="True to show a sample from the dataloader"
     ) 
     
@@ -55,11 +63,15 @@ def main():
     train_data_dir = args.train_data_dir
     prompt_file = args.prompt_file
     limit = args.limit
+    start_ind = int(args.start_ind)
     show_sample = args.show_sample
     audio_files = os.listdir(audio_files_dir)
 
+    end_ind = min((start_ind+limit), len(audio_files))
+    start_ind = min(len(audio_files)-1, start_ind)
+
     # generate source and target specgrams
-    preprocess_batch(audio_files = audio_files[0:limit],
+    preprocess_batch(audio_files = audio_files[start_ind:end_ind],
                     audio_files_dir = audio_files_dir,
                     output_dir = train_data_dir,
                     prompt_file_path = prompt_file,
@@ -71,18 +83,19 @@ def main():
     print("Preprocesing complete!")
 
     if show_sample:
-        train_dataset = CnetRiffDataset(train_data_dir)
+        pass
+        # train_dataset = CnetRiffDataset(train_data_dir)
 
-        # show sample contents if desired
-        print("Sample contents of dataset")
-        item = train_dataset[0]
-        plt.imshow((item['jpg'] + 1 )/ 2)
-        plt.title("Target spectrogram")
-        plt.figure()
-        plt.imshow(item['hint'])
-        plt.title("Source (canny edges)")
-        plt.show()
-        print("prompt:", item['txt'])
+        # # show sample contents if desired
+        # print("Sample contents of dataset")
+        # item = train_dataset[0]
+        # plt.imshow((item['jpg'] + 1 )/ 2)
+        # plt.title("Target spectrogram")
+        # plt.figure()
+        # plt.imshow(item['hint'])
+        # plt.title("Source (canny edges)")
+        # plt.show()
+        # print("prompt:", item['txt'])
 
 if __name__ ==  '__main__':
     main()

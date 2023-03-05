@@ -94,3 +94,4 @@ def audio_to_images_batch(
     with tqdm.tqdm(total=len(audio_paths)) as pbar:
         for i, _ in enumerate(pool.imap_unordered(process_one, inds)):
             pbar.update()
+    pbar.close()

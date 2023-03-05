@@ -5,7 +5,6 @@ channels:
 dependencies:
   - python=3.8.5
   - pip:
-      - spleeter
       - accelerate
       - argh
       - dacite
@@ -13,7 +12,9 @@ dependencies:
       - diffusers>=0.9.0
       - flask
       - flask_cors
+      - matplotlib
       - numpy
+      - opencv-python
       - pillow>=9.1.0
       - plotly
       - pydub
@@ -21,6 +22,7 @@ dependencies:
       - scipy
       - soundfile
       - sox
+      - spleeter
       - streamlit>=1.10.0
       - torch
       - torchaudio
