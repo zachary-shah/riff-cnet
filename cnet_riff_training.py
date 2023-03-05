@@ -66,17 +66,26 @@ def main():
         default="True",
         help="False to unlock part of model that might make it easier to learn unique image types, but risk corrupting model weights."
     ) 
+
+    parser.add_argument(
+        "--add_control",
+        type=bool,
+        nargs="?",
+        default="False",
+        help="False loads control model from ckpt without adding control again"
+    ) 
+    
     
     args = parser.parse_args()
-
-    # get riffusion model downloaded 
-    riffusion_path = hf_hub_download(repo_id="riffusion/riffusion-model-v1", filename="riffusion-model-v1.ckpt")
-
-    print(F"Riffusion .ckpt saved to {riffusion_path}")
-
-    # add control to riffusion and save controlled model to cntrl_riff_path
+    
     cntrl_riff_path = "./models/control_riffusion_ini.ckpt"
-    tool_add_control.tool_add_control(riffusion_path, cntrl_riff_path)
+
+    if args.add_control:
+        # get riffusion model downloaded 
+        riffusion_path = hf_hub_download(repo_id="riffusion/riffusion-model-v1", filename="riffusion-model-v1.ckpt")
+        print(F"Riffusion .ckpt saved to {riffusion_path}")
+        # add control to riffusion and save controlled model to cntrl_riff_path
+        tool_add_control.tool_add_control(riffusion_path, cntrl_riff_path)
 
     # Configs
     batch_size = 4
