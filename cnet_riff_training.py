@@ -1,6 +1,5 @@
 
 import numpy as np
-import librosa
 import os, sys, argparse, json
 import cv2
 from torch.utils.data import Dataset
@@ -11,7 +10,6 @@ from huggingface_hub import hf_hub_download
 from ControlNet import tool_add_control
 from ControlNet.cldm.logger import ImageLogger
 from ControlNet.cldm.model import create_model, load_state_dict
-
 
 class CnetRiffDataset(Dataset):
     def __init__(self, rootdir):
