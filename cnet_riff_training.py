@@ -92,7 +92,7 @@ def main():
         learning_rate = 2e-6
 
     # load dataset. Pytorch Lightning will automatically move it to GPUs.
-    model = create_model('./ControlNet/models/cldm_v15.yaml').cpu()
+    model = create_model('./models/cldm_v15.yaml').cpu()
     model.load_state_dict(load_state_dict(cntrl_riff_path, location='cpu'))
     model.learning_rate = learning_rate
     model.sd_locked = sd_locked
