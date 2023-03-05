@@ -2,8 +2,8 @@ import sys
 import os
 
 import torch
-from share import *
-from cldm.model import create_model
+from ControlNet.share import *
+from ControlNet.cldm.model import create_model
 
 def tool_add_control(input_path, output_path):
 
@@ -19,8 +19,8 @@ def tool_add_control(input_path, output_path):
             return False, ''
         return True, name[len(parent_name):]
 
-    # TODO: maybe get model from ControlNet/models/cldm_v15.yaml instead
-    model = create_model(config_path='./models/cldm_v15.yaml')
+    # TODO: maybe get model from ./models/cldm_v15.yaml instead
+    model = create_model(config_path='./ControlNet/models/cldm_v15.yaml')
 
     pretrained_weights = torch.load(input_path)
     if 'state_dict' in pretrained_weights:
