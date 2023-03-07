@@ -16,10 +16,8 @@
 
 ```python cnet_riff_add_control.py```
 
-If the model is already present, this will not run, but no worries, we can still move on as this step was already completed. 
 
-
-3. At this point, a checkpoint of riffusion with cnet layers added should be saved into ./models. Now, we are ready to train: 
+3. At this point, a checkpoint of riffusion with the added ControlNet layers should be saved into ./models. Now, we are ready to train: 
 
 *run this for fast training:*
 
