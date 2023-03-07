@@ -28,4 +28,4 @@ If the model is already present, this will not run, but no worries, we can still
 
 ```python cnet_riff_training.py --train_data_dir "train-data/" --batch_size 1 --accumulate_gradient_batches 4```
 
-TODO: Figure out why batch_size=1 still doesn't work. need to fix CUDA OOM errors...
+This should train for about 1000 iterations
