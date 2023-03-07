@@ -60,6 +60,13 @@ def main():
         default=512,
         help="for cuda splits."
     )
+    parser.add_argument(
+        "--timesteps",
+        type=int,
+        nargs="?",
+        default=1000,
+        help="Number of epochs for training. Default is 1000."
+    )
     args = parser.parse_args()
 
     # Configs
@@ -69,6 +76,7 @@ def main():
     batch_size = args.batch_size
     train_data_dir = args.train_data_dir
     accumulate_gradient_batches = args.accumulate_gradient_batches
+    timesteps = args.timesteps
     os.environ["PYTORCH_CUDA_ALLOC_CONF"] = f"max_split_size_mb:{args.max_split_size}"
 
 
@@ -86,6 +94,7 @@ def main():
     model.learning_rate = learning_rate
     model.sd_locked = sd_locked
     model.only_mid_control = only_mid_control
+    model.timesteps = timesteps
 
     # load in dataset
     dataset = CnetRiffDataset(train_data_dir)
