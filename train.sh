@@ -1,3 +1,5 @@
+
+# uncomment these lines if github not yet cloned
 git clone https://github.com/zachary-shah/mel-train.git
 cd mel-train
 conda env create -f envs/control_env.yml
