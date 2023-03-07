@@ -2,7 +2,7 @@
 
 # Instructions for use:
 
-1. From terminal, use git pull to pull data and code into VM from mel-train
+1. From terminal, clone this repo to pull in the data and code:
 
 ```git clone https://github.com/zachary-shah/mel-train.git``` 
 
