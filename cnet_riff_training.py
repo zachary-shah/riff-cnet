@@ -94,6 +94,7 @@ def main():
     model.learning_rate = learning_rate
     model.sd_locked = sd_locked
     model.only_mid_control = only_mid_control
+    print(f"Number of timesteps to train: {model.timesteps}")
     model.timesteps = timesteps
 
     # load in dataset
