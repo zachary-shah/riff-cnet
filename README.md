@@ -8,7 +8,7 @@
 
 ```cd mel-train; ls```
 
-2. Now enter the control enviornment and download riffusion / add control to the model:
+2. Now enter the control enviornment and download riffusion / add control to the model (adding control takes 3-5 minutes):
 
 ```conda env create -f envs/control_env.yml```
 
@@ -28,4 +28,4 @@ If the model is already present, this will not run, but no worries, we can still
 
 ```python cnet_riff_training.py --train_data_dir "train-data/" --batch_size 1 --accumulate_gradient_batches 4```
 
-This should train for about 1000 iterations
+This should train for about 1000 iterations, which according to ControlNet authors should take 50 minutes. 
