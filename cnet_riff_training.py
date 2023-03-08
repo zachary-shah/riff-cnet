@@ -134,5 +134,9 @@ def main():
     trainer.fit(model, dataloader)
     print("Training complete. Models and logging saved to directory.")
 
+    # SAVE FINAL CHECKPOINT
+    trainer.save_checkpoint("final_checkpoint.ckpt")
+
+
 if __name__ ==  '__main__':
     main()
