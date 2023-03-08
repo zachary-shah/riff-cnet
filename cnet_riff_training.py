@@ -70,7 +70,7 @@ def main():
     ) 
     parser.add_argument(
         "--only_mid_control",
-        type=int,
+        type=bool,
         nargs="?",
         default=False,
         help="True to limit control to only the middle layers of model."
