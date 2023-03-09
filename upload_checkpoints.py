@@ -1,7 +1,8 @@
-
 from huggingface_hub import login, HfApi
 import os
 from stat import S_ISREG, ST_CTIME, ST_MODE
+
+# get file with wget https://raw.githubusercontent.com/zachary-shah/mel-train/main/upload_checkpoints.py
 
 # checkpoint version number
 version = 3
@@ -13,8 +14,9 @@ root_dir = os.getcwd()
 
 # upload image logs
 print("Uploading images...")
+print(os.path.join(root_dir, "image_log/train/"))
 api.upload_folder(
-    folder_path=os.path.join(root_dir, "/image_log/train/"),
+    folder_path=os.path.join(root_dir, "image_log/train/"),
     repo_id="zachary-shah/riffusion-cnet",
 )
 print("Images upoaded.")
