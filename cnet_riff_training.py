@@ -79,7 +79,7 @@ def main():
 
     # Configs
     cntrl_riff_path = "./models/control_riffusion_ini.ckpt"
-    max_train_time = "00:06:00:00" # max training time is 6 hours (form is "DD:HH:MM:SS")
+    max_train_time = "00:12:00:00" # max training time is 6 hours (form is "DD:HH:MM:SS")
     logger_freq = args.logger_freq
     train_data_dir = args.train_data_dir
     accumulate_gradient_batches = args.accumulate_gradient_batches
@@ -112,7 +112,7 @@ def main():
         precision = 16 # divide 32-precision by 1/2
     else:
         move_metrics_to_cpu = False
-        precision = 16 # TODO: maybe change this to 32 if things are successful
+        precision = 32 # TODO: maybe change this to 32 if things are successful
 
     # load in dataset
     dataset = CnetRiffDataset(train_data_dir)
