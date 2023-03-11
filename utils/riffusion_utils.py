@@ -8,14 +8,10 @@ from multiprocessing.pool import ThreadPool
 from pathlib import Path
 import sys
 
-import argh
 import numpy as np
 import pydub
 import tqdm
 from PIL import Image
-
-sys.path.append('../riffusion-reference/riffusion/')
-sys.path.append('../riffusion-reference/')
 
 from riffusion.spectrogram_image_converter import SpectrogramImageConverter
 from riffusion.spectrogram_params import SpectrogramParams
@@ -70,13 +66,6 @@ def audio_to_images_batch(
                     )
         except Exception:
             return
-
-        # if mono and segment.channels != 1:
-        #     segment = segment.set_channels(1)
-        #     print("changed semgnet chans to 1")
-        # elif not mono and segment.channels != 2:
-        #     segment = segment.set_channels(2)
-        #     print("changed semgnet chans to 2")
 
         # Frame rate
         if segment.frame_rate != params.sample_rate:
