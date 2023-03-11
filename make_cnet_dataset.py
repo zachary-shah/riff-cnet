@@ -72,7 +72,7 @@ def main():
                     prompt_file_path = prompt_file,
                     fs=44100,
                     verbose=True,   
-                    save_wav=False)
+                    save_wav=True)
     print("Preprocesing complete!")
 
     if show_sample:

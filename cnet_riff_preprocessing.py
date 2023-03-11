@@ -139,7 +139,7 @@ def preprocess_batch(audio_files, audio_files_dir, output_dir, prompt_file_path=
         
         # turn sources into canny edges
         for path in source_save_paths:
-            generate_and_replace_canny_source(path, low_thres=100, high_thres=200)
+            generate_and_replace_canny_source(path, low_thres=150, high_thres=200)
         
         # get prompt for this song
         if audio_file in prompt_dict:

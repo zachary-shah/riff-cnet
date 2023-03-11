@@ -29,7 +29,7 @@ def audio_to_images_batch(
     min_frequency: int = 0,
     max_frequency: int = 10000,
     power_for_image: float = 0.25,
-    mono: bool = False,
+    mono: bool = True,
     sample_rate: int = 44100,
     device: str = "cuda",
     num_threads: T.Optional[int] = None,
@@ -50,7 +50,7 @@ def audio_to_images_batch(
         min_frequency=min_frequency,
         max_frequency=max_frequency,
         power_for_image=power_for_image,
-        stereo=not mono,
+        stereo=False,
         sample_rate=sample_rate,
     )
 
@@ -61,23 +61,27 @@ def audio_to_images_batch(
         try:
             #segment = pydub.AudioSegment.from_file(str(audio_path))
             # read from numpy audiosegment
+            waveform = np.int16(audio_segment_arr[ind] / np.max(np.abs(audio_segment_arr[ind])) * (2**15 - 1))
             segment = pydub.AudioSegment(
-                        audio_segment_arr[ind].tobytes(), 
+                        waveform.tobytes(), 
                         frame_rate= sample_rate,
-                        sample_width=audio_segment_arr[ind].dtype.itemsize, 
+                        sample_width=waveform.dtype.itemsize, 
                         channels=1, #TODO: update according to mono boolean
                     )
         except Exception:
             return
 
-        if mono and segment.channels != 1:
-            segment = segment.set_channels(1)
-        elif not mono and segment.channels != 2:
-            segment = segment.set_channels(2)
+        # if mono and segment.channels != 1:
+        #     segment = segment.set_channels(1)
+        #     print("changed semgnet chans to 1")
+        # elif not mono and segment.channels != 2:
+        #     segment = segment.set_channels(2)
+        #     print("changed semgnet chans to 2")
 
         # Frame rate
         if segment.frame_rate != params.sample_rate:
             segment = segment.set_frame_rate(params.sample_rate)
+            print(f"changed frame rate from {segment.frame_rate} to {params.frame_rate}")
 
         # Convert
         image = converter.spectrogram_image_from_audio(segment)
