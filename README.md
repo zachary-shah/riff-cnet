@@ -28,25 +28,40 @@ https://user-images.githubusercontent.com/123213526/225163797-ce5bac66-8fc4-4665
 
 Though these canny edges sound like garbage, we can actually use them to condition the diffusion of a song just like the original. Combining this canny edge map with the text prompt to "Generate an up-tempo female vocal rock melody", here is a sample of what our model creates:
 
+https://user-images.githubusercontent.com/123213526/225164377-8eaa321b-e243-41c2-aa99-c23b36d73d7c.mp4
+
+In this sample, you can hear all the same features of the original background audio (rhythm, tempo, harmony, and instrumentation all preserved); yet the vocals generated are completely different, both rhythmically and stylistically! Though the lyrics are incoherent, the melodic features adhere to the harmony outlined by the background, so the melody actually appears to sync up with the rhythmic and harmonic structure of the background! 
+
+Since the diffusion process is random, we can generate more samples with the same conditioning, yet get completely different results, as you can hear below:
+
+https://user-images.githubusercontent.com/123213526/225164879-2ae8672f-726b-45c7-ab3e-cca583355915.mp4
+
+And that's the process! Of course, there are many more improvements to make, like generating more coherent lyrics (which is an open problem in the generative audio community) or extending the audio generation to longer than 5 seconds. However, our project demonstrates the potential for exploring deep spectral conditioning text-to-audio generation.
 
 
-Notice that this looks similar to the spectrogram of the full audio, but it is missing some of the key features that pertain to the vocals. 
+Just for fun, here's some more of our favorite examples:
 
 
+Here's an example with a reggae clip: 
 
+https://user-images.githubusercontent.com/123213526/225165442-841af8b8-d67f-438e-ba49-18ff656de0d4.mp4
 
-Here's some more examples:
+Conditioning on the canny edge map of the background audio spectrogram, and a text prompt to "Generate an light male vocal reggae melody", here is some of our model's samples: 
+
+https://user-images.githubusercontent.com/123213526/225165470-30731fc2-8b90-4be1-a9e4-73765f9b2faa.mp4
+
+https://user-images.githubusercontent.com/123213526/225165477-76fdae62-68ce-41da-9dcd-a0a7c4c74bf6.mp4
+
 
 Here's another 5 second clip rock song: 
 
 https://user-images.githubusercontent.com/123213526/225160377-99585fe0-bbe0-4c63-ad88-511f4f723f20.mp4
 
-Conditioning our model on these edges, with a text prompt to "Generate an uplifting male vocal rock melody", here is some of our model's samples: 
+Conditioning on the canny edge map of the background audio spectrogram, and a text prompt to "Generate an uplifting male vocal rock melody", here is some of our model's samples: 
 
 https://user-images.githubusercontent.com/123213526/225161071-d7452104-1f5c-42f2-b4ae-8e9b047c6224.mp4
 
 https://user-images.githubusercontent.com/123213526/225161160-09753807-b3be-4b1c-982d-2f62691d3caa.mp4
-
 
 
 
