@@ -36,10 +36,25 @@ Since the diffusion process is random, we can generate more samples with the sam
 
 https://user-images.githubusercontent.com/123213526/225164879-2ae8672f-726b-45c7-ab3e-cca583355915.mp4
 
+
+Now, one might argue that ControlNet isn't necessary to preserve background audio. What happens if we just seed the untuned Riffusion-v1 model's diffusion process with the canny edge map without the ControlNet architecture? Well, this is what the audio will sound like: 
+
+
+https://user-images.githubusercontent.com/123213526/225167505-82754b4c-9d2e-4b56-990f-c7bea88e851e.mp4
+
+
+The audio ends up sounding similar to the edge map we listend to earlier. Essentially, Riffusion-v1 isn't tuned to diffuse from edge-maps, but needs a fully fledged spectrogram to anchor the text-conditioned diffusion. Yet, the features of the seed image will not be preserved in the output audio, as steps will be made away from those spectral features in the latent space during the forward pass of the denoising. As you can see, even if we give Riffusion-v1 the FULL original audio sample for this song as its seed with the same text prompt, we get a sample where the background sounds nothing like the original: 
+
+<TODO: ADD>
+
+
 And that's the process! Of course, there are many more improvements to make, like generating more coherent lyrics (which is an open problem in the generative audio community) or extending the audio generation to longer than 5 seconds. However, our project demonstrates the potential for exploring deep spectral conditioning text-to-audio generation.
 
 
+
+
 Just for fun, here's some more of our favorite examples:
+
 
 
 Here's an example with a reggae clip: 
@@ -53,6 +68,7 @@ https://user-images.githubusercontent.com/123213526/225165470-30731fc2-8b90-4be1
 https://user-images.githubusercontent.com/123213526/225165477-76fdae62-68ce-41da-9dcd-a0a7c4c74bf6.mp4
 
 
+
 Here's another 5 second clip rock song: 
 
 https://user-images.githubusercontent.com/123213526/225160377-99585fe0-bbe0-4c63-ad88-511f4f723f20.mp4
@@ -62,6 +78,7 @@ Conditioning on the canny edge map of the background audio spectrogram, and a te
 https://user-images.githubusercontent.com/123213526/225161071-d7452104-1f5c-42f2-b4ae-8e9b047c6224.mp4
 
 https://user-images.githubusercontent.com/123213526/225161160-09753807-b3be-4b1c-982d-2f62691d3caa.mp4
+
 
 
 
