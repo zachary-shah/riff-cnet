@@ -32,10 +32,10 @@ https://user-images.githubusercontent.com/123213526/225164377-8eaa321b-e243-41c2
 
 In this sample, you can hear all the same features of the original background audio (rhythm, tempo, harmony, and instrumentation all preserved); yet the vocals generated are completely different, both rhythmically and stylistically! Though the lyrics are incoherent, the melodic features adhere to the harmony outlined by the background, so the melody actually appears to sync up with the rhythmic and harmonic structure of the background! 
 
-In fact, if we observe the spectrogram of the model's sample, we can see that in fact, the conditioned edges are preserved! Here you can see a comparison between the above model sample, and its conditioned edge map: 
+In fact, if we observe the spectrogram of the model's sample, we can see that in fact, the conditioned edges are preserved! Here you can see a comparison between the above model sample (the gif pauses longer on this frame), its conditioned edge map, and the original target,: 
 
 
-<TODO: ADD>
+![ezgif com-gif-maker copy](https://user-images.githubusercontent.com/123213526/225171953-0b4bd1f0-09d4-4207-a724-f53aa1b9ff78.gif)
 
 
 Since the diffusion process is random, we can generate more samples with the same conditioning, yet get completely different results, as you can hear below:
@@ -43,7 +43,7 @@ Since the diffusion process is random, we can generate more samples with the sam
 https://user-images.githubusercontent.com/123213526/225164879-2ae8672f-726b-45c7-ab3e-cca583355915.mp4
 
 
-Now, one might argue that ControlNet isn't necessary to preserve background audio. What happens if we just seed the untuned Riffusion-v1 model's diffusion process with the canny edge map without the ControlNet architecture? Well, this is what the audio will sound like: 
+Now, one might argue that ControlNet isn't necessary to preserve background audio. Why can't we just seed the untuned Riffusion-v1 model's diffusion process with the canny edge map without the ControlNet architecture? Well, when we tried that, this is what the audio sounds like: 
 
 
 https://user-images.githubusercontent.com/123213526/225167505-82754b4c-9d2e-4b56-990f-c7bea88e851e.mp4
@@ -55,11 +55,11 @@ The audio ends up sounding similar to the edge map we listend to earlier. Essent
 https://user-images.githubusercontent.com/123213526/225169935-eabab80e-608c-42fb-bcce-61a674c7a26e.mp4
 
 
-And that's the process! Of course, there are many more improvements to make, like generating more coherent lyrics (which is an open problem in the generative audio community) or extending the audio generation to longer than 5 seconds. However, our project demonstrates the potential for exploring deep spectral conditioning text-to-audio generation.
+And that's our project! Of course, there are many more improvements to make, like generating more coherent lyrics (which is an open problem in the generative audio community) or extending the audio generation to longer than 5 seconds. However, our project demonstrates the potential for exploring deep spectral conditioning text-to-audio generation.
 
 
 
-Just for fun, here's some more of our favorite examples:
+Just for fun, here's some more of our favorite model samples:
 
 
 
