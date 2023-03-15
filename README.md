@@ -45,11 +45,11 @@ https://user-images.githubusercontent.com/123213526/225167505-82754b4c-9d2e-4b56
 
 The audio ends up sounding similar to the edge map we listend to earlier. Essentially, Riffusion-v1 isn't tuned to diffuse from edge-maps, but needs a fully fledged spectrogram to anchor the text-conditioned diffusion. Yet, the features of the seed image will not be preserved in the output audio, as steps will be made away from those spectral features in the latent space during the forward pass of the denoising. As you can see, even if we give Riffusion-v1 the FULL original audio sample for this song as its seed with the same text prompt, we get a sample where the background sounds nothing like the original: 
 
-<TODO: ADD>
+
+https://user-images.githubusercontent.com/123213526/225169935-eabab80e-608c-42fb-bcce-61a674c7a26e.mp4
 
 
 And that's the process! Of course, there are many more improvements to make, like generating more coherent lyrics (which is an open problem in the generative audio community) or extending the audio generation to longer than 5 seconds. However, our project demonstrates the potential for exploring deep spectral conditioning text-to-audio generation.
-
 
 
 
