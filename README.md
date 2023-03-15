@@ -96,7 +96,7 @@ Our pretrained model is located at our HuggingFace repo. Access this model using
 
 ```git clone https://huggingface.co/zachary-shah/riffusion-cnet-v2```
 
-See how to use our pre-trained model using the Jupyter Notebook ```sample_riff_cnet.ipynb```. This script is best run in Google Colab. To run, make sure to set up the necessary Python environment at ```conda env create -f envs/control_env.yml```, and clone this repo in your Google Drive using ```git clone https://github.com/zachary-shah/mel-train.git```. Run ```sample_riff_cnet.ipynb``` within the cloned repo.
+See how to use our pre-trained model using the Jupyter Notebook ```sample_riff_cnet.ipynb```. This script is best run in Google Colab. To run, make sure to set up the necessary Python environment at ```conda env create -f envs/control_env.yml```, and clone this repo in your Google Drive using ```git clone https://github.com/zachary-shah/riff-cnet.git```. Run ```sample_riff_cnet.ipynb``` within the cloned repo.
 
 
 ## To train Riffusion using ControlNet from scratch:
@@ -105,9 +105,9 @@ Note that this is a compute-intensive process and requires the use of at least 2
 
 1. From terminal, clone this repo to pull in the data and code:
 
-```git clone https://github.com/zachary-shah/mel-train.git``` 
+```git clone https://github.com/zachary-shah/riff-cnet.git``` 
 
-```cd mel-train; ls```
+```cd riff-cnet; ls```
 
 2. (Optional) We provide all our preprocessed train data in the ```train-data/``` directory, which is generated from the raw audio files in ```raw-audio```. To re-generate this data, first set up the processing environment ```conda env create -f envs/processing_env.yml```, and then simply run:
 
