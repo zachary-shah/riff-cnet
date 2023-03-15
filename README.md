@@ -18,11 +18,11 @@ Notice that most of the low portion of the spectrogram details the rhythmic stru
 
 https://user-images.githubusercontent.com/123213526/225163395-eb17fae0-57ba-4896-8bd8-2a2632b76937.mp4
 
-Now, to condition our model to generate a melody over this background, we turn this background audio into a spectrogram and detect the canny edges of the spectrogram:
+Now, to condition our model to generate a melody over this background, we turn this background audio into a spectrogram and detect the canny edges of the spectrogram. Observe the difference between the full audio spectrogram and the canny edges of the isolated background audio:
 
-![Generate an up-tempo female vocal rock melody _seed](https://user-images.githubusercontent.com/123213526/225163427-d234f0ea-8db2-4e7f-96a8-7c3f216cf3cf.png)
+![ezgif com-gif-maker](https://user-images.githubusercontent.com/123213526/225170849-ac055967-1449-4ea7-8694-224f69bb06cb.gif)
 
-Notice that this outlines many of the edges we saw in the spectrogram of the full audio above, but none of the singer's prominent vocal features are detected due to vocal isolation by Spleeter. Just for fun, if we turn this canny-edge detected spectrogram back into audio, it sounds nothing like the original (warning: turn down your volume):
+Notice that this outlines many of the edges we saw in the spectrogram of the full audio above (especially in the low-ends), but none of the singer's prominent vocal features are detected due to vocal isolation by Spleeter. Just for fun, if we turn this canny-edge detected spectrogram back into audio, it sounds nothing like the original (warning: turn down your volume):
 
 https://user-images.githubusercontent.com/123213526/225163797-ce5bac66-8fc4-4665-989c-33ff85506463.mp4
 
@@ -31,6 +31,12 @@ Though these canny edges sound like garbage, we can actually use them to conditi
 https://user-images.githubusercontent.com/123213526/225164377-8eaa321b-e243-41c2-aa99-c23b36d73d7c.mp4
 
 In this sample, you can hear all the same features of the original background audio (rhythm, tempo, harmony, and instrumentation all preserved); yet the vocals generated are completely different, both rhythmically and stylistically! Though the lyrics are incoherent, the melodic features adhere to the harmony outlined by the background, so the melody actually appears to sync up with the rhythmic and harmonic structure of the background! 
+
+In fact, if we observe the spectrogram of the model's sample, we can see that in fact, the conditioned edges are preserved! Here you can see a comparison between the above model sample, and its conditioned edge map: 
+
+
+<TODO: ADD>
+
 
 Since the diffusion process is random, we can generate more samples with the same conditioning, yet get completely different results, as you can hear below:
 
