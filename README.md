@@ -6,7 +6,7 @@
 
 ## Examples of our Model's Samples
 
-To clarify exactly what our model is doing, let's dive into an example. Say we have a song with some vocal lines that we don't like, and we want to generate some new vocals using Stable Diffusion. Let's take this rouglhy 5 second clip of a rock song as our starting point: 
+To clarify exactly what our model is doing, let's dive into an example. Say we have a song with some vocal lines that we don't like, and we want to generate some new vocals using Stable Diffusion. Let's take this roughly 5 second clip of a rock song as our starting point: 
 
 https://user-images.githubusercontent.com/123213526/225162902-84f3feec-6b3c-4020-99ca-cf51c35b0f5b.mp4
 
