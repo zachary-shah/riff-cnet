@@ -12,10 +12,11 @@ from torch.utils.data import Dataset
     # source --> folder with canny edge detection spectrograms
     # target --> folder with full audio spectrograms
 class CnetRiffDataset(Dataset):
-    def __init__(self, rootdir):
+    def __init__(self, rootdir, promptfile="prompt.json"):
         self.data = []
         self.rootdir = rootdir
-        with open(os.path.join(rootdir, 'prompt.json'), 'rt') as f:
+        self.promptfile = promptfile
+        with open(os.path.join(rootdir, promptfile), 'rt') as f:
             for line in f:
                 self.data.append(json.loads(line))
 
