@@ -10,19 +10,21 @@ from pathlib import Path
 from utils.audio_segment_utils import segment_audio, write_wav_file
 from utils import riffusion_utils
 from utils import spleeter_utils
+from PIL import Image
+from skimage import filters
 
 # create fresh prompt file
-def create_prompt_file(rootdir):
+def create_prompt_file(rootdir, prompt_filename="prompt.json", overwrite=True):
     # remove prompts.json if it already exists; rewrite it fresh
-    if Path(os.path.join(rootdir,"prompt.json")).is_file():
-        os.remove(os.path.join(rootdir,"prompt.json"))
+    if Path(os.path.join(rootdir,prompt_filename)).is_file() and overwrite:
+        os.remove(os.path.join(rootdir,prompt_filename))
     return
 
 # append for all segment source/targets created for one audio file
 # all sources and files have same prompt for now
-def append_to_prompt_file(rootdir, source_filepaths, target_filepaths, prompt, verbose=False):
+def append_to_prompt_file(rootdir, source_filepaths, target_filepaths, prompt, prompt_filename="prompt.json", verbose=False):
 
-    with open(os.path.join(rootdir,"prompt.json"), 'a') as outfile:
+    with open(os.path.join(rootdir,prompt_filename), 'a') as outfile:
         for i in range(len(source_filepaths)):
             packet = {
                 "source": str(source_filepaths[i]),
@@ -52,6 +54,45 @@ def generate_and_replace_canny_source(file_path, low_thres=100, high_thres=200):
     cv2.imwrite(str(file_path), source_spec)
     
     return
+
+
+"""
+Takes in a PIL image of a spectrogram and generates the respective control image.
+Save control image to source_path.
+"""
+def generate_and_save_control(source_spectrogram: Image.Image,
+                              source_path: str,
+                              control_method: str,
+                              opt: dict):
+            
+    # make and save control element from source specgtrogram
+    if control_method == "fullspec":
+        source_spectrogram.save(source_path, exif=source_spectrogram.getexif(), format="JPEG")
+    
+    elif control_method == "canny":
+        edges = cv2.Canny(np.array(source_spectrogram), opt["canny_low_thresh"], opt["canny_high_thresh"])
+        cv2.imwrite(source_path, edges)
+    
+    elif control_method == "sobel":
+        edge_sobel = filters.sobel(np.array(source_spectrogram))
+        edge_sobel = np.uint8(edge_sobel / np.max(edge_sobel) * 255)
+        cv2.imwrite(source_path, edge_sobel)
+
+    elif control_method == "sobeldenoise":
+        source_denoised = cv2.fastNlMeansDenoising(np.array(source_spectrogram),None, opt["denoise_h"], 7, 21)  
+        edges_sobel_denoised = filters.sobel(source_denoised)
+        edges_sobel_denoised = np.uint8(edges_sobel_denoised / np.max(edges_sobel_denoised) * 255)
+        cv2.imwrite(source_path, edges_sobel_denoised)
+
+    elif control_method == "thresh":
+        raise NotImplementedError()
+    
+    elif control_method == "bpf":
+        raise NotImplementedError()
+    
+    else:
+        print("Control method not supported. Choose from: \"fullspec\", \"canny\", \"thresh\", and \"bpf\".")
+        raise NotImplementedError()  
 
 # given audio files, save all targets, source, and prompt file
 def preprocess_batch(audio_files, audio_files_dir, output_dir, prompt_file_path=None, fs=44100, verbose=False, save_wav=False):
@@ -156,6 +197,7 @@ def preprocess_batch(audio_files, audio_files_dir, output_dir, prompt_file_path=
                             target_filepaths=target_save_paths,
                             prompt=song_prompt,
                             verbose=verbose)
+        
     if verbose:
         print("Segmentation and spectrogram generation complete.")
     return

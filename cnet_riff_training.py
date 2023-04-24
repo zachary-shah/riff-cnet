@@ -16,7 +16,7 @@ def main():
         "--train_data_dir",
         type=str,
         nargs="?",
-        default="train-data/",
+            ult="train-data/",
         help="directory to read training dataset from"
     )
     parser.add_argument(

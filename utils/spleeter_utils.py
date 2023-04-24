@@ -1,6 +1,7 @@
 import logging
 import os
 from spleeter.separator import Separator
+from spleeter.audio import STFTBackend
 from spleeter.audio.adapter import AudioAdapter
 import soundfile as sf
 import numpy as np
@@ -21,7 +22,9 @@ def separate_audio_to_dir(inp_audio_path, out_dir, stem_num=2):
     
     stem_num = verify_stem_count(stem_num) 
         
-    separator = Separator("spleeter:2stems")
+    separator = Separator("spleeter:2stems", 
+                          stft_backend=STFTBackend.LIBROSA,
+                          multiprocess=False)
     separator.separate_to_file(inp_audio_path, out_dir)
     
 def separate_audio(inp_audio_path, fs, stem_num=2):
@@ -32,7 +35,10 @@ def separate_audio(inp_audio_path, fs, stem_num=2):
     audio_loader = AudioAdapter.default()
     waveform, _ = audio_loader.load(inp_audio_path, sample_rate=int(fs))
         
-    separator = Separator("spleeter:2stems")
+    separator = Separator("spleeter:2stems",
+                          stft_backend=STFTBackend.LIBROSA,
+                          multiprocess=False)
+    
     pred_audio_stem = separator.separate(waveform)
     pred_audio_stem["full_audio"] = np.asarray(waveform)
     

@@ -87,3 +87,64 @@ def audio_to_images_batch(
         for i, _ in enumerate(pool.imap_unordered(process_one, inds)):
             pbar.update()
     pbar.close()
+
+
+
+def audio_array_to_image(
+    audio_segment_arr: np.ndarray,
+    outpath: str = "",
+    save_img: bool = True,
+    image_extension: str = "jpg",
+    step_size_ms: int = 10,
+    num_frequencies: int = 512,
+    min_frequency: int = 0,
+    max_frequency: int = 10000,
+    power_for_image: float = 0.25,
+    sample_rate: int = 44100,
+    device: str = "cuda",
+):
+    """
+    Process a np array of an audio clip into a spectrogram representation.
+    """
+
+    params = SpectrogramParams(
+        step_size_ms=step_size_ms,
+        num_frequencies=num_frequencies,
+        min_frequency=min_frequency,
+        max_frequency=max_frequency,
+        power_for_image=power_for_image,
+        stereo=False,
+        sample_rate=sample_rate,
+    )
+
+    converter = SpectrogramImageConverter(params=params, device=device)
+
+    # Load into pydub
+    try:
+        # read from numpy audiosegment
+        waveform = np.int16(audio_segment_arr / np.max(np.abs(audio_segment_arr)) * (2**15 - 1))
+        segment = pydub.AudioSegment(
+                    waveform.tobytes(), 
+                    frame_rate= sample_rate,
+                    sample_width=waveform.dtype.itemsize, 
+                    channels=1,
+                )
+    except Exception:
+        print("Loading segment failed.")
+        return
+
+    # Frame rate
+    if segment.frame_rate != params.sample_rate:
+        segment = segment.set_frame_rate(params.sample_rate)
+        print(f"changed frame rate from {segment.frame_rate} to {params.frame_rate}")
+
+    # Convert
+    image = converter.spectrogram_image_from_audio(segment)
+
+    # Save
+    if save_img:
+        image_path = outpath + "." + image_extension
+        image_format = {"jpg": "JPEG", "jpeg": "JPEG", "png": "PNG"}[image_extension]
+        image.save(image_path, exif=image.getexif(), format=image_format)
+
+    return image

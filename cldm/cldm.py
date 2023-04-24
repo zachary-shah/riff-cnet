@@ -304,7 +304,6 @@ class ControlNet(nn.Module):
 
         return outs
 
-
 class ControlLDM(LatentDiffusion):
 
     def __init__(self, control_stage_config, control_key, only_mid_control, *args, **kwargs):
@@ -325,13 +324,16 @@ class ControlLDM(LatentDiffusion):
         control = control.to(memory_format=torch.contiguous_format).float()
         return x, dict(c_crossattn=[c], c_concat=[control])
 
-    def apply_model(self, x_noisy, t, cond, *args, **kwargs):
+    # @ZACH: added "use_control" boolean to allow for no use of control on successive diffusion samples
+    # TODO: update apply_model calls with use_control = False where desired
+    def apply_model(self, x_noisy, t, cond, use_control=True, *args, **kwargs):
         assert isinstance(cond, dict)
         diffusion_model = self.model.diffusion_model
 
         cond_txt = torch.cat(cond['c_crossattn'], 1)
 
-        if cond['c_concat'] is None:
+        # if no control condition or use_control=False, just use diffusion model.
+        if cond['c_concat'] is None or not use_control:
             eps = diffusion_model(x=x_noisy, timesteps=t, context=cond_txt, control=None, only_mid_control=self.only_mid_control)
         else:
             control = self.control_model(x=x_noisy, hint=torch.cat(cond['c_concat'], 1), timesteps=t, context=cond_txt)
