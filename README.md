@@ -57,7 +57,7 @@ https://user-images.githubusercontent.com/123213526/225169935-eabab80e-608c-42fb
 
 And that's our project! Of course, there are many more improvements to make, like generating more coherent lyrics (which is an open problem in the generative audio community) or extending the audio generation to longer than 5 seconds. However, our project demonstrates the potential for exploring deep spectral conditioning text-to-audio generation.
 
-
+## More Samples
 
 Just for fun, here's some more of our favorite model samples:
 
