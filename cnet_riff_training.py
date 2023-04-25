@@ -96,6 +96,13 @@ def main():
         default="./models/cldm_v15.yaml",
         help="max training time default is 12 hours (form is \"DD:HH:MM:SS\")"
     )
+    parser.add_argument(
+        "--num_workers",
+        type=int,
+        nargs="?",
+        default=2,
+        help="number of workers for the dataloader"
+    )
     args = parser.parse_args()
 
     # Unchangeable configs
@@ -139,7 +146,7 @@ def main():
         dataset = CnetRiffDataset(args.train_data_dir, promptfile="prompt-"+args.control_method+".json")
     else:
         dataset = CnetRiffDataset(args.train_data_dir)
-    dataloader = DataLoader(dataset, num_workers=0, batch_size=args.batch_size, shuffle=True)
+    dataloader = DataLoader(dataset, num_workers=args.num_workers, batch_size=args.batch_size, shuffle=True)
 
     print(f"Number of epochs to train: {np.ceil(args.max_steps * args.batch_size / len(dataset))}")
 

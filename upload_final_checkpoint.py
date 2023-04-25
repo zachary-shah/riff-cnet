@@ -14,7 +14,7 @@ parser.add_argument(
     "--image_log_dir",
     type=str,
     nargs="?",
-    default="version1/",
+    default="image_log/",
     help="root directory where all image log data is"
 )
 parser.add_argument(
