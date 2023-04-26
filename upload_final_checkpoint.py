@@ -41,7 +41,6 @@ root_dir = os.getcwd()
 # upload image logs
 try:
     print("Uploading images...")
-    print(os.path.join(root_dir, "image_log/"))
     api.upload_folder(
         folder_path=args.image_log_dir,
         path_in_repo=os.path.join("image_logs", args.control_method+"_image_log/"),
@@ -56,7 +55,7 @@ try:
     print("Uploading checkpoint...")
     api.upload_file(
         path_or_fileobj=args.ckpt_path,
-        path_in_repo=args.ckpt_path,
+        path_in_repo=os.path.join("checkpoints",args.control_method+"-"+args.ckpt_path.split("/")[-1]),
         repo_id=args.repo_id,
     )
     print("Checkpoint uploaded!")
