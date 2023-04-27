@@ -10,12 +10,6 @@ from PIL import Image
 import numpy as np
 import random 
 
-from riffusion.spectrogram_image_converter import SpectrogramImageConverter
-from riffusion.spectrogram_converter import SpectrogramConverter
-from riffusion.spectrogram_params import SpectrogramParams
-
-from cldm.ddim_hacked import DDIMSampler
-from cnet_riff_dataset import CnetRiffDataset
 from cldm.model import create_model, load_state_dict
 
 
@@ -57,7 +51,7 @@ def resize_image(input_image, resolution):
     return img
 
 # helper function to sample the model
-def sample_ddim(control, prompt, model,
+def sample_ddim(control, prompt, model, ddim_sampler,
                 guess_mode = False,
                 strength = 1,
                 scale = 9,
