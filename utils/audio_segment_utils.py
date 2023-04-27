@@ -36,7 +36,7 @@ def segment_audio(audio_data, fs=44100, num_segments=6, pitch_augment=True):
     if pitch_augment:
         pitch_augmented_segs = []
         # pitch modulation for data augmentation
-        for pitch_offset in [-5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6]:
+        for pitch_offset in [-3, -2, -1, 1, 2, 3]:
             for audio_segment in audio_segments:
                 pitch_augmented_segs.append(librosa.effects.pitch_shift(np.squeeze(audio_segment), sr=fs, n_steps=pitch_offset))
         audio_segments = np.vstack([np.squeeze(audio_segments), np.stack(pitch_augmented_segs)])
