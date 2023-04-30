@@ -12,7 +12,6 @@ import random
 
 from cldm.model import create_model, load_state_dict
 
-
 # get cnet model loaded into state dict
 def get_model(mdl_path, mdl_config='./models/cldm_v15.yaml'):
     model = create_model(mdl_config).cpu()
@@ -64,6 +63,9 @@ def sample_ddim(control, prompt, model, ddim_sampler,
 
     with torch.no_grad():
         # preprocessing
+        if (np.max(control) <= 1) and (np.min(control) >= 0):
+            print("switching control scale from [0.,1.] to [0,255]")
+            control = np.uint8(control * 255)
         control = resize_image(HWC3(control), image_resolution)
         H, W, C = control.shape
         control = torch.from_numpy(control).float().cuda()
