@@ -25,61 +25,24 @@ class CnetRiffDataset(Dataset):
 
     def __getitem__(self, idx):
 
-        try: 
-            item = self.data[idx]
+        item = self.data[idx]
 
-            source_filename = item['source']
-            target_filename = item['target']
-            prompt = item['prompt']
+        source_filename = item['source']
+        target_filename = item['target']
+        prompt = item['prompt']
 
-            source = cv2.imread(source_filename)
-            target = cv2.imread(target_filename)
-            
-            # # Do not forget that OpenCV read images in BGR order.
-            source = cv2.cvtColor(source, cv2.COLOR_BGR2RGB)
-            target = cv2.cvtColor(target, cv2.COLOR_BGR2RGB)
-
-            # # Normalize source images to [0, 1].
-            source = source.astype(np.float32) / 255.0
-
-            # # Normalize target images to [-1, 1].
-            target = (target.astype(np.float32) / 127.5) - 1.0
-
-            return dict(jpg=target, txt=prompt, hint=source)
+        source = cv2.imread(source_filename)
+        target = cv2.imread(target_filename)
         
-        except:
+        # # Do not forget that OpenCV read images in BGR order.
+        source = cv2.cvtColor(source, cv2.COLOR_BGR2RGB)
+        target = cv2.cvtColor(target, cv2.COLOR_BGR2RGB)
 
-            try: 
-                print(f"Errored when trying to get data: {item}")
-                print(f"just trying without cv2.cvtColor")
+        # # Normalize source images to [0, 1].
+        source = source.astype(np.float32) / 255.0
 
-                item = self.data[idx]
-                
-                source_filename = item['source']
-                target_filename = item['target']
-                prompt = item['prompt']
+        # # Normalize target images to [-1, 1].
+        target = (target.astype(np.float32) / 127.5) - 1.0
 
-                source = cv2.imread(source_filename)
-                target = cv2.imread(target_filename)
-  
-                # # Normalize source images to [0, 1].
-                source = source.astype(np.float32) / 255.0
-
-                # # Normalize target images to [-1, 1].
-                target = (target.astype(np.float32) / 127.5) - 1.0
-
-                print("That worked!")
-
-                return dict(jpg=target, txt=prompt, hint=source)
-            
-            except:
-
-                print("Errored again. just returning all zeros")
-
-                source = np.zeros((512,512,3),dtype=np.float32)
-                target = np.zeros((512,512,3),dtype=np.float32)
-                prompt = "Generate nothing."
-
-                print("MAKING EMPTY EXAMPLE")
-
-                return dict(jpg=target, txt=prompt, hint=source)
+        return dict(jpg=target, txt=prompt, hint=source)
+    
