@@ -37,6 +37,7 @@ def HWC3(x):
         y = color * alpha + 255.0 * (1.0 - alpha)
         y = y.clip(0, 255).astype(np.uint8)
         return y
+    
 def resize_image(input_image, resolution):
     H, W, C = input_image.shape
     H = float(H)
@@ -58,16 +59,18 @@ def sample_ddim(control, prompt, model, ddim_sampler,
                 num_samples = 1,
                 ddim_steps = 50,
                 seed = -1,
+                control_lims = [0,255],
                 image_resolution = 512,
                 log_every_t=100):
 
     with torch.no_grad():
         # preprocessing
         if (np.max(control) <= 1) and (np.min(control) >= 0):
-            print("switching control scale from [0.,1.] to [0,255]")
             control = np.uint8(control * 255)
         control = resize_image(HWC3(control), image_resolution)
         H, W, C = control.shape
+        # rescale back to desired control input range
+        control = np.float64(control) / 255 * (control_lims[1] - control_lims[0]) + control_lims[0]
         control = torch.from_numpy(control).float().cuda()
         control = torch.stack([control for _ in range(num_samples)], dim=0)
         control = einops.rearrange(control, 'b h w c -> b c h w').clone()
