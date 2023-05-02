@@ -103,10 +103,16 @@ def main():
         default=2,
         help="number of workers for the dataloader"
     )
+    parser.add_argument(
+        "--cntrl_riff_path",
+        type=str,
+        nargs="?",
+        default="./models/control_riffusion_ini.ckpt",
+        help="pth to model ckpt (can resume training from ckpt if desired)"
+    )
     args = parser.parse_args()
 
-    # Unchangeable configs
-    cntrl_riff_path = "./models/control_riffusion_ini.ckpt"
+    # block allocation limit for OOM issues
     os.environ["PYTORCH_CUDA_ALLOC_CONF"] = f"max_split_size_mb:{args.max_split_size}"
 
     # SD_LOCKED: default is True. but reccomend trying false for unique image types. but then lower LR to 2e-6
@@ -128,7 +134,7 @@ def main():
 
     # create controlnet and load in riffusion weights
     model = create_model(args.model_config_path).cpu()
-    model.load_state_dict(load_state_dict(cntrl_riff_path, location='cpu'))
+    model.load_state_dict(load_state_dict(args.cntrl_riff_path, location='cpu'))
     model.learning_rate = learning_rate
     model.sd_locked = args.sd_locked
     model.only_mid_control = args.only_mid_control
