@@ -94,7 +94,7 @@ def main():
         type=str,
         nargs="?",
         default="./models/cldm_v15.yaml",
-        help="max training time default is 12 hours (form is \"DD:HH:MM:SS\")"
+        help="path for config file for controlnet"
     )
     parser.add_argument(
         "--num_workers",

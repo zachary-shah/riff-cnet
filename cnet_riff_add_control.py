@@ -35,7 +35,7 @@ def tool_add_control(input_path, output_path, cntrl_mdl_config_path):
             copy_k = 'model.diffusion_' + name
         else:
             copy_k = k
-        if copy_k in pretrained_weights:
+        if copy_k in pretrained_weights and not is_control:
             target_dict[k] = pretrained_weights[copy_k].clone()
         else:
             target_dict[k] = scratch_dict[k].clone()
