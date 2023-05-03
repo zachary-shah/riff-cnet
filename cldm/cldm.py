@@ -332,7 +332,16 @@ class ControlNet(nn.Module):
         t_emb = timestep_embedding(timesteps, self.model_channels, repeat_only=False)
         emb = self.time_embed(t_emb)
 
+        print("SHAPE OF THINGS AS PROGRESSING THROUGH SAMPLING OF CONTROLNET")
+        print("Input control (hint) shape: ")
+        print(f" shape = {hint.shape}")
+        print(f" type = {hint.type}")
+        
         guided_hint = self.input_hint_block(hint, emb, context)
+
+        print("Input hint block output (guided hint) shape: ")
+        print(f" shape = {guided_hint.shape}")
+        print(f" type = {guided_hint.type}")
 
         outs = []
 
@@ -346,8 +355,16 @@ class ControlNet(nn.Module):
                 h = module(h, emb, context)
             outs.append(zero_conv(h, emb, context))
 
+            print(f"Outs Encoder {len(outs)} shape:")
+            print(f" shape = {outs[-1].shape}")
+            print(f" type = {outs[-1].type}")
+
         h = self.middle_block(h, emb, context)
         outs.append(self.middle_block_out(h, emb, context))
+
+        print(f"Outs Middle block shape:")
+        print(f" shape = {outs[-1].shape}")
+        print(f" type = {outs[-1].type}")
 
         return outs
 
@@ -452,21 +469,22 @@ class ControlNetMLP(nn.Module):
         )
         self.zero_convs = nn.ModuleList([self.make_zero_conv(model_channels)])
 
+        # keep same embedding for getting input hint, but change from SiLU to ReLU for eventual convexification
         self.input_hint_block = TimestepEmbedSequential(
             conv_nd(dims, hint_channels, 16, 3, padding=1),
-            nn.SiLU(),
+            nn.ReLU(),
             conv_nd(dims, 16, 16, 3, padding=1),
-            nn.SiLU(),
+            nn.ReLU(),
             conv_nd(dims, 16, 32, 3, padding=1, stride=2),
-            nn.SiLU(),
+            nn.ReLU(),
             conv_nd(dims, 32, 32, 3, padding=1),
-            nn.SiLU(),
+            nn.ReLU(),
             conv_nd(dims, 32, 96, 3, padding=1, stride=2),
-            nn.SiLU(),
+            nn.ReLU(),
             conv_nd(dims, 96, 96, 3, padding=1),
-            nn.SiLU(),
+            nn.ReLU(),
             conv_nd(dims, 96, 256, 3, padding=1, stride=2),
-            nn.SiLU(),
+            nn.ReLU(),
             zero_module(conv_nd(dims, 256, model_channels, 3, padding=1))
         )
 
