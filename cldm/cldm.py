@@ -405,6 +405,7 @@ class ControlNetLite(nn.Module):
         )
 
         # encoder for control hint into shape [*,model_channels,64,64]
+        #TODO: decide on if adding zero conv after the control embedder
         self.input_hint_block = TimestepEmbedSequential(
             conv_nd(dims, hint_channels, 16, 3, padding=1),
             nn.SiLU(),
@@ -420,7 +421,7 @@ class ControlNetLite(nn.Module):
             nn.SiLU(),
             conv_nd(dims, 96, 256, 3, padding=1, stride=2),
             nn.SiLU(),
-            # zero_module(conv_nd(dims, 256, model_channels, 3, padding=1)) TODO: decide on if adding zero conv after the control embedder
+            zero_module(conv_nd(dims, 256, model_channels, 3, padding=1)) 
         )
 
         ch = model_channels
