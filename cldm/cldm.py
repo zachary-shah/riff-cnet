@@ -63,6 +63,8 @@ class ControlledUnetModel(UNetModel):
 class ControlledUnetModelLite(UNetModel):
     def forward(self, x, timesteps=None, context=None, control=None, only_mid_control=False, **kwargs):
         hs = []
+
+        # don't calculate gradient on timestep embedding
         with torch.no_grad():
             t_emb = timestep_embedding(timesteps, self.model_channels, repeat_only=False)
             emb = self.time_embed(t_emb)
@@ -83,12 +85,13 @@ class ControlledUnetModelLite(UNetModel):
             h += control[-1]
 
         # decoder layers, no control should be present here
-        with torch.no_grad(): #TODO: may need to remove torch.no_grad()
-            for i, module in enumerate(self.output_blocks):
-                h = torch.cat([h, hs.pop()], dim=1)
-                h = module(h, emb, context)
+        # with torch.no_grad(): #TODO: may need to remove torch.no_grad()
+        for i, module in enumerate(self.output_blocks):
+            h = torch.cat([h, hs.pop()], dim=1)
+            h = module(h, emb, context)
 
         h = h.type(x.dtype)
+        print(f"ControlledUnetModelLite forward called successfully. output has shape {h.shape}")
         return self.out(h)
 
 # from controlnet authors
