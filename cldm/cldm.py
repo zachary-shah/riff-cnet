@@ -91,7 +91,7 @@ class ControlledUnetModelLite(UNetModel):
             h = module(h, emb, context)
 
         h = h.type(x.dtype)
-        print(f"ControlledUnetModelLite forward called successfully. output has shape {h.shape}")
+        #print(f"ControlledUnetModelLite forward called successfully. output has shape {h.shape}")
         return self.out(h)
 
 # from controlnet authors
