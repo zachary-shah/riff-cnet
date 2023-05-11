@@ -55,7 +55,7 @@ along with potential nonuniformity across different songs
 for one track, S01 for another.)"""
 MODE_INSTR_NAME_MAP = {
     0: "", # Allow any and all instruments to be generated (widest task)
-    1: ["Piano", "Saxophone", "Flute", "Harmonica"], # Category: generate melodic instruments only
+    1: ["Piano", "Grand Piano", "Acoustic Grand Piano", "Vibraphone", "Clavinet", "Saxophone", "Flute", "Harmonica"], # Category: generate melodic instruments only
     2: ["Percussive Organ"], # Category: custom subset
 }
 
@@ -320,7 +320,7 @@ for song_no, song in enumerate(train_example_dirs):
             generable_stems = random.sample(list(valid_gen_non_bgnd_stem_IDs), np.min([len(valid_gen_non_bgnd_stem_IDs), 8]))
             
             if opt["verbose"]: 
-                print(f"\t\tMaking {len(generable_stems)} examples out of {len(stem_IDs_in_frame)} stems in frame: ")
+                print(f"\t\tMaking {len(generable_stems)} example(s) out of {len(stem_IDs_in_frame)} stems in frame: ")
             for gen_stem in generable_stems:
                 generated_stem = dict({gen_stem: stem_arrs_by_frame[frame_no][gen_stem]})
                 source_stems_name = stem_IDs_in_frame[stem_IDs_in_frame != gen_stem]
