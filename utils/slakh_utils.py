@@ -1,7 +1,9 @@
-import pydub
+import json, os, shutil
 import numpy as np 
-import librosa 
 import random
+import pydub
+import librosa 
+from tqdm import tqdm
 
 """
 Function for getting the name of the instrument from the metadata
@@ -162,3 +164,95 @@ def make_slakh_prompt(gen_instruments: list,
             else:
                 gen_str += f"{instrument}, "
     return hint_str + gen_str
+
+# given some set of data directories, combine them and split in to train / val sets
+def split_train_val(all_data_dirs = ["slakh-preproccessed"], 
+                    control_methods = ["canny", "fullspec", "sobel", "sobeldenoise"],
+                    train_data_dir = "slakh-data/train/",
+                    val_data_dir = "slakh-data/val/",
+                    ):
+        
+    assert not os.path.exists(train_data_dir), "train data already exists."
+    assert not os.path.exists(val_data_dir), "val data already exists."
+
+    print("Splitting into train / val datasets: ")
+
+    os.makedirs(train_data_dir)
+    os.makedirs(val_data_dir)
+    for control_method in control_methods:
+        os.makedirs(os.path.join(val_data_dir, "source-" + control_method), exist_ok=True)
+        os.makedirs(os.path.join(train_data_dir,"source-" + control_method), exist_ok=True)
+    os.makedirs(os.path.join(val_data_dir, "target/"), exist_ok=True)
+    os.makedirs(os.path.join(train_data_dir, "target/"), exist_ok=True)
+
+    all_data = {}
+    for control_method in control_methods:
+        all_data[control_method] = []
+        for rootdir in all_data_dirs:
+            with open(os.path.join(rootdir, 'prompt-'+control_method+'.json'), 'rt') as f:
+                for line in f:
+                    all_data[control_method].append(json.loads(line))
+
+    # get random train / test split
+    n_total = len(all_data[control_methods[0]])
+    n_test = int(n_total * 0.01)
+    inds = list(np.arange(n_total))
+
+    test_inds = random.sample(inds, n_test)
+    test_inds = np.sort(test_inds)
+    train_inds = np.array(inds)[[inds[i] not in test_inds for i in range(n_total)]]
+
+    # move data over for each control method
+    for c_num, control_method in enumerate(control_methods):
+
+        train_data = np.array(all_data[control_method])[list(train_inds)]
+        test_data = np.array(all_data[control_method])[list(test_inds)]
+
+        print(f"moving for control method: {control_method}")
+        print(f"  {len(train_data)} train examples")
+        print(f"  {len(test_data)} test examples")
+
+        # copy over train data
+        for i in tqdm(range(len(train_data))):
+            # only move target for first control method
+            if c_num == 0:
+                new_target_file = os.path.join(train_data_dir, "target", train_data[i]["target"].split('/')[-1])
+                shutil.move(train_data[i]["target"], new_target_file)
+            # copy control method
+            new_file = os.path.join(train_data_dir, "source-"+control_method, train_data[i]["source"].split('/')[-1])
+            shutil.move(train_data[i]["source"], new_file)
+
+        # write train prompt
+        with open(os.path.join(train_data_dir,"prompt-"+control_method+".json"), 'w') as outfile:
+            for i in range(len(train_data)):
+                packet = {
+                    "source": str(os.path.join(train_data_dir, "source-"+control_method, train_data[i]["source"].split('/')[-1])),
+                    "target":  str(os.path.join(train_data_dir, "target", train_data[i]["target"].split('/')[-1])),
+                    "prompt": str(train_data[i]["prompt"])
+                }
+                json.dump(packet, outfile)
+                outfile.write('\n')
+            outfile.close()
+
+        # copy over val data
+        for i in tqdm(range(len(test_data))):
+            # only move target for first control method
+            if c_num == 0:
+                new_target_file = os.path.join(val_data_dir, "target", test_data[i]["target"].split('/')[-1])
+                shutil.move(test_data[i]["target"], new_target_file)
+            # copy control method
+            new_file = os.path.join(val_data_dir, "source-"+control_method, test_data[i]["source"].split('/')[-1])
+            shutil.move(test_data[i]["source"], new_file)
+
+        # write val prompt
+        with open(os.path.join(val_data_dir,"prompt-"+control_method+".json"), 'w') as outfile:
+            for i in range(len(test_data)):
+                packet = {
+                    "source": str(os.path.join(val_data_dir, "source-"+control_method, test_data[i]["source"].split('/')[-1])),
+                    "target":  str(os.path.join(val_data_dir, "target", test_data[i]["target"].split('/')[-1])),
+                    "prompt": str(test_data[i]["prompt"])
+                }
+                json.dump(packet, outfile)
+                outfile.write('\n')
+            outfile.close()
+    

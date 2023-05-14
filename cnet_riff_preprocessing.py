@@ -63,14 +63,14 @@ Save control image to source_path.
 def generate_and_save_control(source_spectrogram: Image.Image,
                               source_path: str,
                               control_method: str,
-                              opt: dict):
+                              opt):
             
     # make and save control element from source specgtrogram
     if control_method == "fullspec":
         source_spectrogram.save(source_path, exif=source_spectrogram.getexif(), format="JPEG")
     
     elif control_method == "canny":
-        edges = cv2.Canny(np.array(source_spectrogram), opt["canny_low_thresh"], opt["canny_high_thresh"])
+        edges = cv2.Canny(np.array(source_spectrogram), opt.canny_low_thresh, opt.canny_high_thresh)
         cv2.imwrite(source_path, edges)
     
     elif control_method == "sobel":
@@ -79,7 +79,7 @@ def generate_and_save_control(source_spectrogram: Image.Image,
         cv2.imwrite(source_path, edge_sobel)
 
     elif control_method == "sobeldenoise":
-        source_denoised = cv2.fastNlMeansDenoising(np.array(source_spectrogram),None, opt["denoise_h"], 7, 21)  
+        source_denoised = cv2.fastNlMeansDenoising(np.array(source_spectrogram),None, opt.denoise_h, 7, 21)  
         edges_sobel_denoised = filters.sobel(source_denoised)
         edges_sobel_denoised = np.uint8(edges_sobel_denoised / np.max(edges_sobel_denoised) * 255)
         cv2.imwrite(source_path, edges_sobel_denoised)
