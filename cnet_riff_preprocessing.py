@@ -7,9 +7,6 @@ import os
 from pathlib import Path
 
 # for spectrum generation
-from utils.audio_segment_utils import segment_audio, write_wav_file
-from utils import riffusion_utils
-from utils import spleeter_utils
 from PIL import Image
 from skimage import filters
 
@@ -64,6 +61,7 @@ def generate_and_save_control(source_spectrogram: Image.Image,
                               source_path: str,
                               control_method: str,
                               opt):
+                              
             
     # make and save control element from source specgtrogram
     if control_method == "fullspec":
@@ -96,6 +94,10 @@ def generate_and_save_control(source_spectrogram: Image.Image,
 
 # given audio files, save all targets, source, and prompt file
 def preprocess_batch(audio_files, audio_files_dir, output_dir, prompt_file_path=None, fs=44100, verbose=False, save_wav=False):
+
+    from utils import spleeter_utils
+    from utils import riffusion_utils
+    from utils.audio_segment_utils import segment_audio, write_wav_file
 
     assert prompt_file_path is not None
 
