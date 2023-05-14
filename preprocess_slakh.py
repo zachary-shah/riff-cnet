@@ -137,6 +137,13 @@ parser.add_argument(
     default=True,
     help="True to save 1 percent of data for holdout / validation set"
 )
+parser.add_argument(
+    "--max-examples",
+    type=int,
+    nargs="?",
+    default=-1,
+    help="Max number of examples to create in total"
+)
 
 opt = parser.parse_args()
 
@@ -145,6 +152,8 @@ opt = parser.parse_args()
 # safety checks
 assert not os.path.exists(opt.data_root), f"Error: <data_root> {opt.data_root} already exists."
 assert opt.max_bpm > opt.min_bpm, "Error: min_bpm must be less than max_bpm."
+
+global_counter = 0
 
 NARROW_INSTRUMENT_LIST = [
     "Grand Piano",
@@ -239,6 +248,7 @@ def make_train_example(source_stems_info, generated_stems_info, all_stem_info, s
         print(f"\t\t{ex_no} - prompt: {prompt}")
 
     ex_no += 1
+    global_counter += 1
     return ex_no
 
 # tracking
