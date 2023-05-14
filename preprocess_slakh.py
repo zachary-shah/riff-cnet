@@ -138,7 +138,7 @@ parser.add_argument(
     help="True to save 1 percent of data for holdout / validation set"
 )
 parser.add_argument(
-    "--max-examples",
+    "--max_examples",
     type=int,
     nargs="?",
     default=-1,
@@ -152,8 +152,6 @@ opt = parser.parse_args()
 # safety checks
 assert not os.path.exists(opt.data_root), f"Error: <data_root> {opt.data_root} already exists."
 assert opt.max_bpm > opt.min_bpm, "Error: min_bpm must be less than max_bpm."
-
-global_counter = 0
 
 NARROW_INSTRUMENT_LIST = [
     "Grand Piano",
@@ -248,7 +246,6 @@ def make_train_example(source_stems_info, generated_stems_info, all_stem_info, s
         print(f"\t\t{ex_no} - prompt: {prompt}")
 
     ex_no += 1
-    global_counter += 1
     return ex_no
 
 # tracking
@@ -279,212 +276,226 @@ if opt.verbose:
 valid_song_nos = []
 desired_percent = 60 # Keep song if at least this percent meets desired tempo metrics
 for song_no, folder in enumerate(train_example_dirs):
-    mix_audio, audio_sr = librosa.load(os.path.join(opt.root_data_dir, folder, 'mix.wav'), duration=60)
-    onset_env = librosa.onset.onset_strength(y=mix_audio, sr=audio_sr)
-    dtempo = librosa.beat.tempo(onset_envelope=onset_env, sr=audio_sr, aggregate=None)
-    valid_idxs = np.where((dtempo >= opt.min_bpm) & (dtempo <= opt.max_bpm), 1, 0)
-    valid_bpm = sum(valid_idxs) / len(dtempo) * 100 >= desired_percent
-    
-    if valid_bpm:
-        valid_song_nos.append(song_no)
+
+    try:
+        mix_audio, audio_sr = librosa.load(os.path.join(opt.root_data_dir, folder, 'mix.wav'), duration=60)
+        onset_env = librosa.onset.onset_strength(y=mix_audio, sr=audio_sr)
+        dtempo = librosa.beat.tempo(onset_envelope=onset_env, sr=audio_sr, aggregate=None)
+        valid_idxs = np.where((dtempo >= opt.min_bpm) & (dtempo <= opt.max_bpm), 1, 0)
+        valid_bpm = sum(valid_idxs) / len(dtempo) * 100 >= desired_percent
+        
+        if valid_bpm:
+            valid_song_nos.append(song_no)
+
+    except:
+        print(f"WARNING: could not read song {song_no}")
 
 if opt.verbose:
     print(f"Valid Tempo Songs: {np.add(np.array(valid_song_nos), 1)}", flush=True)
 
 # preprocess each song
 for song_no, song in enumerate(train_example_dirs):
-    
-    if not song_no in valid_song_nos:
-        if opt.verbose:
-            print(f"INFO: Skipping song {song_no} due to filtering constraints")
-        continue
-    else:
-        if opt.verbose:
-            print(f"INFO: Preprocessing song {song_no}...")
 
-    # load metadata
-    with open(os.path.join(opt.root_data_dir, song, 'metadata.yaml'), 'r') as stream:
-        metadata = yaml.safe_load(stream)
+    try:
         
-    # get some potentially useful metadata
-    stem_metadata = metadata['stems']
-    num_metadata_stems = len(list(stem_metadata.keys()))
+        if not song_no in valid_song_nos:
+            if opt.verbose:
+                print(f"INFO: Skipping song {song_no} due to filtering constraints")
+            continue
+        else:
+            if opt.verbose:
+                print(f"INFO: Preprocessing song {song_no}...")
 
-    # get only the useful info and from metadata
-    stem_info = dict.fromkeys(stem_metadata.keys(), '')
-    stems = dict.fromkeys(stem_metadata.keys(), '')
-    
-    # for keeping track of instruments so far, so as to remove duplicates
-    inst_list = []
-    for stem in stem_metadata:
-        try:
-            curr_instrument = get_instrument_str(stem_metadata[stem])
+        # load metadata
+        with open(os.path.join(opt.root_data_dir, song, 'metadata.yaml'), 'r') as stream:
+            metadata = yaml.safe_load(stream)
+            
+        # get some potentially useful metadata
+        stem_metadata = metadata['stems']
+        num_metadata_stems = len(list(stem_metadata.keys()))
 
-            # add instrument stem if not yet seen before
-            if curr_instrument not in inst_list:
+        # get only the useful info and from metadata
+        stem_info = dict.fromkeys(stem_metadata.keys(), '')
+        stems = dict.fromkeys(stem_metadata.keys(), '')
+        
+        # for keeping track of instruments so far, so as to remove duplicates
+        inst_list = []
+        for stem in stem_metadata:
+            try:
+                curr_instrument = get_instrument_str(stem_metadata[stem])
 
-                if stem_metadata[stem]['inst_class'] in ["Drums", "Piano", "Bass"]:
-                    isbgnd = True
+                # add instrument stem if not yet seen before
+                if curr_instrument not in inst_list:
+
+                    if stem_metadata[stem]['inst_class'] in ["Drums", "Piano", "Bass"]:
+                        isbgnd = True
+                    else:
+                        isbgnd = False
+                
+                    # update text description for some things
+                    stem_info[stem] = {"class": stem_metadata[stem]['inst_class'],
+                                    "instrument": curr_instrument,
+                                    "background": isbgnd} 
+                    
+                    # load each stem as a pydub audio file
+                    stems[stem] = pydub.AudioSegment.from_file(os.path.join(opt.root_data_dir, song, metadata['audio_dir'], f"{stem}.wav"))
+                    
+                    # update frame rate if needed
+                    if stems[stem].frame_rate != opt.fs:
+                        stems[stem] = stems[stem].set_frame_rate(opt.fs)
+
+                    # add instrument into list
+                    inst_list.append(curr_instrument)
+                
+                # otherwise find ID for duplicated instrument and add this part to it
                 else:
-                    isbgnd = False
-            
-                # update text description for some things
-                stem_info[stem] = {"class": stem_metadata[stem]['inst_class'],
-                                "instrument": curr_instrument,
-                                "background": isbgnd} 
-                
-                # load each stem as a pydub audio file
-                stems[stem] = pydub.AudioSegment.from_file(os.path.join(opt.root_data_dir, song, metadata['audio_dir'], f"{stem}.wav"))
-                
-                # update frame rate if needed
-                if stems[stem].frame_rate != opt.fs:
-                    stems[stem] = stems[stem].set_frame_rate(opt.fs)
+                    for key in stem_info:
+                        if stem_info[key]["instrument"] == curr_instrument:
+                            dup_stem = pydub.AudioSegment.from_file(os.path.join(opt.root_data_dir, song, metadata['audio_dir'], f"{stem}.wav"))
+                            stems[key] = stems[key].overlay(dup_stem, position=0)
+                            break
+                    if opt.verbose:
+                        print(f"Duplicate found: Combining stem {stem}: {get_instrument_str(stem_metadata[stem])} into stem {key}")
+                    stem_info.pop(stem)
+                    stems.pop(stem)
 
-                # add instrument into list
-                inst_list.append(curr_instrument)
-            
-            # otherwise find ID for duplicated instrument and add this part to it
-            else:
-                for key in stem_info:
-                    if stem_info[key]["instrument"] == curr_instrument:
-                        dup_stem = pydub.AudioSegment.from_file(os.path.join(opt.root_data_dir, song, metadata['audio_dir'], f"{stem}.wav"))
-                        stems[key] = stems[key].overlay(dup_stem, position=0)
-                        break
+            except:
                 if opt.verbose:
-                    print(f"Duplicate found: Combining stem {stem}: {get_instrument_str(stem_metadata[stem])} into stem {key}")
+                    print(f"Removing stem {stem}: {get_instrument_str(stem_metadata[stem])}")
                 stem_info.pop(stem)
                 stems.pop(stem)
 
-        except:
-            if opt.verbose:
-                print(f"Removing stem {stem}: {get_instrument_str(stem_metadata[stem])}")
-            stem_info.pop(stem)
-            stems.pop(stem)
-
-    # Each song has a potentially different map of stem IDs to stem names
-    stem_IDs = list(stems.keys())
-    num_actual_stems = len(stem_IDs)
-    stem_names = [stem_info[key]['instrument'] for key in list(stem_info.keys())]
-
-    if opt.verbose:
-        print(f"PREPROCESSED SONG {song_no+1}/{len(train_example_dirs)}: ")
-        print(f"\tStem names for song: {', '.join(stem_names)}\n")
-        print(f"\tStem IDs for song: {', '.join(stem_IDs)}\n")
-        print(f"\tNum stems in metadata: {num_metadata_stems}")
-        print(f"\tNum loaded stems: {num_actual_stems}\n")
-
-    # get frames in audio where each stem is present
-    frames = dict.fromkeys(stems.keys(), "")
-    for stem_ID in stem_IDs:
-        segment = stems[stem_ID]
-
-        frames[stem_ID] = get_stem_frames(segment, 
-                                            overlap = opt.frame_overlap,
-                                            frame_seconds = opt.frame_len_seconds,
-                                            min_power_prop = opt.frame_min_power_prop,
-                                            fs = opt.fs)
-
-    # get list of all valid frames that exist
-    frame_nos = sorted(list(set([itm for l in [list(frames[k].keys()) for k in frames] for itm in l])))
-    num_frames = len(frame_nos)
-
-    # make frame number the keys for all frames
-    stem_arrs_by_frame = dict.fromkeys(frame_nos,"")
-    for stem in frames:
-        for arr in frames[stem]:
-            if stem_arrs_by_frame[arr] == "":
-                stem_arrs_by_frame[arr] = {}
-            stem_arrs_by_frame[arr][stem] = frames[stem][arr]
-            
-    # get stems that exist in each frame
-    stem_IDs_by_frame = {}
-    for frame_no in frame_nos:
-        frame_stem_IDs = []
-        for stem_ID in frames:
-            if frame_no in list(frames[stem_ID].keys()):
-                frame_stem_IDs.append(stem_ID)
-        stem_IDs_by_frame[frame_no] = frame_stem_IDs
-
-    if opt.verbose:
-        print(f"\tnumber of frames: {num_frames}\n")
-
-    ## ITERATE OVER FRAMES AND BUILD TRAINING EXAMPLES FOR EACH FRAME
-    for frame_no in frame_nos:
+        # Each song has a potentially different map of stem IDs to stem names
+        stem_IDs = list(stems.keys())
+        num_actual_stems = len(stem_IDs)
+        stem_names = [stem_info[key]['instrument'] for key in list(stem_info.keys())]
 
         if opt.verbose:
-            print(f"\tFRAME {frame_no+1}/{len(frame_nos)}:", flush=True) # Flush output buffer on each frame
+            print(f"PREPROCESSED SONG {song_no+1}/{len(train_example_dirs)}: ")
+            print(f"\tStem names for song: {', '.join(stem_names)}\n")
+            print(f"\tStem IDs for song: {', '.join(stem_IDs)}\n")
+            print(f"\tNum stems in metadata: {num_metadata_stems}")
+            print(f"\tNum loaded stems: {num_actual_stems}\n")
 
-        # COMBINATORIAL SET MAKING RULES (at most 22 examples procured per frame)
-        # types of sets:
-          # if at least 2 background stems and 1 non-background stem is present: 
-              # make at most 3 combinations of generating background stems from a non-background stem
-              # make at most 3 combinations of generating a non-background stems from background stems
-          # if at least 4 stems present total:
-              # make at most 8 examples of generating 1 stem from all other stems
-          # if at least 5 stems present total:
-              # make at most 4 examples of generating 2 stems from all other stems
-        
-        # get stems that are considered background
-        stem_IDs_in_frame = np.array(stem_IDs_by_frame[frame_no])
-        bgnd_stem_IDs = stem_IDs_in_frame[np.array([stem_info[key]["background"] for key in stem_IDs_in_frame])]
-        non_bgnd_stem_IDs = stem_IDs_in_frame[np.array([not stem_info[key]["background"] for key in stem_IDs_in_frame])]
-        
-        valid_gen_non_bgnd_stem_IDs = get_narrow_gen_stem_IDs(non_bgnd_stem_IDs, stem_info, mode_num=opt.desired_mode)
-        
-        ex_no = 0
-        # make at least one melody from bgnd and bgnd from melody examples, if there is enough of each present in frame
-        # in narrower version: only generate melody/harmony from background
-        if len(bgnd_stem_IDs) >= 2 and len(valid_gen_non_bgnd_stem_IDs) >= 1: 
-            # get at most 3 examples where melody/harmony are generated from background
-            source_stems = dict([(f, stem_arrs_by_frame[frame_no][f]) for f in bgnd_stem_IDs])
-            generated_stem_IDs = random.sample(list(valid_gen_non_bgnd_stem_IDs), min(3, len(valid_gen_non_bgnd_stem_IDs)))
-            
-            generated_stem_infos = dict([(f, stem_arrs_by_frame[frame_no][f]) for f in generated_stem_IDs])
+        # get frames in audio where each stem is present
+        frames = dict.fromkeys(stems.keys(), "")
+        for stem_ID in stem_IDs:
+            segment = stems[stem_ID]
+
+            frames[stem_ID] = get_stem_frames(segment, 
+                                                overlap = opt.frame_overlap,
+                                                frame_seconds = opt.frame_len_seconds,
+                                                min_power_prop = opt.frame_min_power_prop,
+                                                fs = opt.fs)
+
+        # get list of all valid frames that exist
+        frame_nos = sorted(list(set([itm for l in [list(frames[k].keys()) for k in frames] for itm in l])))
+        num_frames = len(frame_nos)
+
+        # make frame number the keys for all frames
+        stem_arrs_by_frame = dict.fromkeys(frame_nos,"")
+        for stem in frames:
+            for arr in frames[stem]:
+                if stem_arrs_by_frame[arr] == "":
+                    stem_arrs_by_frame[arr] = {}
+                stem_arrs_by_frame[arr][stem] = frames[stem][arr]
+                
+        # get stems that exist in each frame
+        stem_IDs_by_frame = {}
+        for frame_no in frame_nos:
+            frame_stem_IDs = []
+            for stem_ID in frames:
+                if frame_no in list(frames[stem_ID].keys()):
+                    frame_stem_IDs.append(stem_ID)
+            stem_IDs_by_frame[frame_no] = frame_stem_IDs
+
+        if opt.verbose:
+            print(f"\tnumber of frames: {num_frames}\n")
+
+        ## ITERATE OVER FRAMES AND BUILD TRAINING EXAMPLES FOR EACH FRAME
+        for frame_no in frame_nos:
+
             if opt.verbose:
-                print("\t\tGenerating melodies from bgnd: ")
-            for generated_stem_info in generated_stem_infos:
-                gen_stem_set = {generated_stem_info:generated_stem_infos[generated_stem_info]}
-                ex_no = make_train_example(source_stems, gen_stem_set, stem_info, song_no, frame_no, ex_no, opt)
+                print(f"\tFRAME {frame_no+1}/{len(frame_nos)}:", flush=True) # Flush output buffer on each frame
 
-            # get at most 3 examples where background generated from melody/harmony
-            # generated_stems = dict([(f, stem_arrs_by_frame[frame_no][f]) for f in bgnd_stems])
-            # source_stems_name = random.sample(list(non_bgnd_stems), min(3, len(non_bgnd_stems)))
-            # if opt.verbose: 
-            #     print("\tGenerating bgnds from a melody: ")
-            # for source_stem_name in source_stems_name:
-            #     source_stem = dict({source_stem_name: stem_arrs_by_frame[frame_no][source_stem_name]})
-            #     ex_no = make_train_example(source_stem, generated_stems, stem_info, song_no, frame_no, ex_no, opt)
-
-        # make all combinations of 1 generated stem, with max 6 generated stems, if 4 or more stems
-        if len(stem_IDs_in_frame) > 4:
-            # at most 8 examples
-            generable_stems = random.sample(list(valid_gen_non_bgnd_stem_IDs), np.min([len(valid_gen_non_bgnd_stem_IDs), 8]))
+            # COMBINATORIAL SET MAKING RULES (at most 22 examples procured per frame)
+            # types of sets:
+            # if at least 2 background stems and 1 non-background stem is present: 
+                # make at most 3 combinations of generating background stems from a non-background stem
+                # make at most 3 combinations of generating a non-background stems from background stems
+            # if at least 4 stems present total:
+                # make at most 8 examples of generating 1 stem from all other stems
+            # if at least 5 stems present total:
+                # make at most 4 examples of generating 2 stems from all other stems
             
+            # get stems that are considered background
+            stem_IDs_in_frame = np.array(stem_IDs_by_frame[frame_no])
+            bgnd_stem_IDs = stem_IDs_in_frame[np.array([stem_info[key]["background"] for key in stem_IDs_in_frame])]
+            non_bgnd_stem_IDs = stem_IDs_in_frame[np.array([not stem_info[key]["background"] for key in stem_IDs_in_frame])]
+            
+            valid_gen_non_bgnd_stem_IDs = get_narrow_gen_stem_IDs(non_bgnd_stem_IDs, stem_info, mode_num=opt.desired_mode)
+            
+            ex_no = 0
+            # make at least one melody from bgnd and bgnd from melody examples, if there is enough of each present in frame
+            # in narrower version: only generate melody/harmony from background
+            if len(bgnd_stem_IDs) >= 2 and len(valid_gen_non_bgnd_stem_IDs) >= 1: 
+                # get at most 3 examples where melody/harmony are generated from background
+                source_stems = dict([(f, stem_arrs_by_frame[frame_no][f]) for f in bgnd_stem_IDs])
+                generated_stem_IDs = random.sample(list(valid_gen_non_bgnd_stem_IDs), min(3, len(valid_gen_non_bgnd_stem_IDs)))
+                
+                generated_stem_infos = dict([(f, stem_arrs_by_frame[frame_no][f]) for f in generated_stem_IDs])
+                if opt.verbose:
+                    print("\t\tGenerating melodies from bgnd: ")
+                for generated_stem_info in generated_stem_infos:
+                    gen_stem_set = {generated_stem_info:generated_stem_infos[generated_stem_info]}
+                    ex_no = make_train_example(source_stems, gen_stem_set, stem_info, song_no, frame_no, ex_no, opt)
+
+                # get at most 3 examples where background generated from melody/harmony
+                # generated_stems = dict([(f, stem_arrs_by_frame[frame_no][f]) for f in bgnd_stems])
+                # source_stems_name = random.sample(list(non_bgnd_stems), min(3, len(non_bgnd_stems)))
+                # if opt.verbose: 
+                #     print("\tGenerating bgnds from a melody: ")
+                # for source_stem_name in source_stems_name:
+                #     source_stem = dict({source_stem_name: stem_arrs_by_frame[frame_no][source_stem_name]})
+                #     ex_no = make_train_example(source_stem, generated_stems, stem_info, song_no, frame_no, ex_no, opt)
+
+            # make all combinations of 1 generated stem, with max 6 generated stems, if 4 or more stems
+            if len(stem_IDs_in_frame) > 4:
+                # at most 8 examples
+                generable_stems = random.sample(list(valid_gen_non_bgnd_stem_IDs), np.min([len(valid_gen_non_bgnd_stem_IDs), 8]))
+                
+                if opt.verbose: 
+                    print(f"\t\tMaking {len(generable_stems)} example(s) out of {len(stem_IDs_in_frame)} stems in frame: ")
+                for gen_stem in generable_stems:
+                    generated_stem = dict({gen_stem: stem_arrs_by_frame[frame_no][gen_stem]})
+                    source_stems_name = stem_IDs_in_frame[stem_IDs_in_frame != gen_stem]
+                    source_stems = dict([(f, stem_arrs_by_frame[frame_no][f]) for f in source_stems_name])
+                    ex_no = make_train_example(source_stems, generated_stem, stem_info, song_no, frame_no, ex_no, opt)
+
+            # make some combinations of 2 generated stems, with max 4 examples, if 5 or more stems
+            # TODO: port over narrowing of gen-instruments to this more complex case
+            # if len(stems_in_frame) > 5:
+            #     # at most 4 examples
+            #     generable_stems = random.sample(list(stems_in_frame), np.min([len(stems_in_frame), 5]))
+            #     if opt.verbose:
+            #         print(f"\tMaking {len(generable_stems)-1} examples out of {len(stems_in_frame)} stems in frame: ")
+            #     for i in range(len(generable_stems) - 1):
+            #         generated_stems = dict({generable_stems[i]: stem_arrs_by_frame[frame_no][generable_stems[i]],
+            #                             generable_stems[i+1]: stem_arrs_by_frame[frame_no][generable_stems[i+1]]})
+            #         source_stems_name = stems_in_frame[(stems_in_frame != generable_stems[i]) * (stems_in_frame != generable_stems[i+1])]
+            #         source_stems = dict([(f, stem_arrs_by_frame[frame_no][f]) for f in source_stems_name])
+            #         ex_no = make_train_example(source_stems, generated_stems, stem_info, song_no, frame_no, ex_no, opt)
+
             if opt.verbose: 
-                print(f"\t\tMaking {len(generable_stems)} example(s) out of {len(stem_IDs_in_frame)} stems in frame: ")
-            for gen_stem in generable_stems:
-                generated_stem = dict({gen_stem: stem_arrs_by_frame[frame_no][gen_stem]})
-                source_stems_name = stem_IDs_in_frame[stem_IDs_in_frame != gen_stem]
-                source_stems = dict([(f, stem_arrs_by_frame[frame_no][f]) for f in source_stems_name])
-                ex_no = make_train_example(source_stems, generated_stem, stem_info, song_no, frame_no, ex_no, opt)
+                print(f"\n\tFRAME SUMMARY: frame no {frame_no+1} made {ex_no} frames")
+            num_examples_total += ex_no
 
-        # make some combinations of 2 generated stems, with max 4 examples, if 5 or more stems
-        # TODO: port over narrowing of gen-instruments to this more complex case
-        # if len(stems_in_frame) > 5:
-        #     # at most 4 examples
-        #     generable_stems = random.sample(list(stems_in_frame), np.min([len(stems_in_frame), 5]))
-        #     if opt.verbose:
-        #         print(f"\tMaking {len(generable_stems)-1} examples out of {len(stems_in_frame)} stems in frame: ")
-        #     for i in range(len(generable_stems) - 1):
-        #         generated_stems = dict({generable_stems[i]: stem_arrs_by_frame[frame_no][generable_stems[i]],
-        #                             generable_stems[i+1]: stem_arrs_by_frame[frame_no][generable_stems[i+1]]})
-        #         source_stems_name = stems_in_frame[(stems_in_frame != generable_stems[i]) * (stems_in_frame != generable_stems[i+1])]
-        #         source_stems = dict([(f, stem_arrs_by_frame[frame_no][f]) for f in source_stems_name])
-        #         ex_no = make_train_example(source_stems, generated_stems, stem_info, song_no, frame_no, ex_no, opt)
+            if num_examples_total >= opt.max_examples:
+                break
+    
+    except:
 
-        if opt.verbose: 
-            print(f"\n\tFRAME SUMMARY: frame no {frame_no+1} made {ex_no} frames")
-        num_examples_total += ex_no
+        print(f"SOME ERROR ON SONG {song_no}")
 
 # split into train and val sets if desired 
 if opt.split_data:
