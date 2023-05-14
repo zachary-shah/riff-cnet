@@ -321,49 +321,49 @@ for song_no, song in enumerate(train_example_dirs):
         # for keeping track of instruments so far, so as to remove duplicates
         inst_list = []
         for stem in stem_metadata:
-            try:
-                curr_instrument = get_instrument_str(stem_metadata[stem])
+            # try:
+            curr_instrument = get_instrument_str(stem_metadata[stem])
 
-                # add instrument stem if not yet seen before
-                if curr_instrument not in inst_list:
+            # add instrument stem if not yet seen before
+            if curr_instrument not in inst_list:
 
-                    if stem_metadata[stem]['inst_class'] in ["Drums", "Piano", "Bass"]:
-                        isbgnd = True
-                    else:
-                        isbgnd = False
-                
-                    # update text description for some things
-                    stem_info[stem] = {"class": stem_metadata[stem]['inst_class'],
-                                    "instrument": curr_instrument,
-                                    "background": isbgnd} 
-                    
-                    # load each stem as a pydub audio file
-                    stems[stem] = pydub.AudioSegment.from_file(os.path.join(opt.root_data_dir, song, metadata['audio_dir'], f"{stem}.wav"))
-                    
-                    # update frame rate if needed
-                    if stems[stem].frame_rate != opt.fs:
-                        stems[stem] = stems[stem].set_frame_rate(opt.fs)
-
-                    # add instrument into list
-                    inst_list.append(curr_instrument)
-                
-                # otherwise find ID for duplicated instrument and add this part to it
+                if stem_metadata[stem]['inst_class'] in ["Drums", "Piano", "Bass"]:
+                    isbgnd = True
                 else:
-                    for key in stem_info:
-                        if stem_info[key]["instrument"] == curr_instrument:
-                            dup_stem = pydub.AudioSegment.from_file(os.path.join(opt.root_data_dir, song, metadata['audio_dir'], f"{stem}.wav"))
-                            stems[key] = stems[key].overlay(dup_stem, position=0)
-                            break
-                    if opt.verbose:
-                        print(f"Duplicate found: Combining stem {stem}: {get_instrument_str(stem_metadata[stem])} into stem {key}")
-                    stem_info.pop(stem)
-                    stems.pop(stem)
+                    isbgnd = False
+            
+                # update text description for some things
+                stem_info[stem] = {"class": stem_metadata[stem]['inst_class'],
+                                "instrument": curr_instrument,
+                                "background": isbgnd} 
+                
+                # load each stem as a pydub audio file
+                stems[stem] = pydub.AudioSegment.from_file(os.path.join(opt.root_data_dir, song, metadata['audio_dir'], f"{stem}.wav"))
+                
+                # update frame rate if needed
+                if stems[stem].frame_rate != opt.fs:
+                    stems[stem] = stems[stem].set_frame_rate(opt.fs)
 
-            except:
+                # add instrument into list
+                inst_list.append(curr_instrument)
+            
+            # otherwise find ID for duplicated instrument and add this part to it
+            else:
+                for key in stem_info:
+                    if stem_info[key]["instrument"] == curr_instrument:
+                        dup_stem = pydub.AudioSegment.from_file(os.path.join(opt.root_data_dir, song, metadata['audio_dir'], f"{stem}.wav"))
+                        stems[key] = stems[key].overlay(dup_stem, position=0)
+                        break
                 if opt.verbose:
-                    print(f"Removing stem {stem}: {get_instrument_str(stem_metadata[stem])}")
+                    print(f"Duplicate found: Combining stem {stem}: {get_instrument_str(stem_metadata[stem])} into stem {key}")
                 stem_info.pop(stem)
                 stems.pop(stem)
+
+            # except:
+            #     if opt.verbose:
+            #         print(f"Removing stem {stem}: {get_instrument_str(stem_metadata[stem])}")
+            #     stem_info.pop(stem)
+            #     stems.pop(stem)
 
         # Each song has a potentially different map of stem IDs to stem names
         stem_IDs = list(stems.keys())
