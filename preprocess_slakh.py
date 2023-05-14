@@ -336,23 +336,14 @@ for song_no, song in enumerate(train_example_dirs):
                     stem_info[stem] = {"class": stem_metadata[stem]['inst_class'],
                                     "instrument": curr_instrument,
                                     "background": isbgnd} 
-                    
-                    print(f"stem info: {stem_info[stem]}")
-                    
-                    load_pth = os.path.join(opt.root_data_dir, song, metadata['audio_dir'], f"{stem}.wav")
-                    
-                    print(f"loading from path {load_pth}")
-                    
+                                        
                     # load each stem as a pydub audio file
+                    load_pth = os.path.join(opt.root_data_dir, song, "stems", f"{stem}.wav")
                     stems[stem] = pydub.AudioSegment.from_file(load_pth)
                     
-                    print("file loaded")
-
                     # update frame rate if needed
                     if stems[stem].frame_rate != opt.fs:
                         stems[stem] = stems[stem].set_frame_rate(opt.fs)
-
-                    print("frame rate asserted")
 
                     # add instrument into list
                     inst_list.append(curr_instrument)
@@ -361,7 +352,7 @@ for song_no, song in enumerate(train_example_dirs):
                 else:
                     for key in stem_info:
                         if stem_info[key]["instrument"] == curr_instrument:
-                            dup_stem = pydub.AudioSegment.from_file(os.path.join(opt.root_data_dir, song, metadata['audio_dir'], f"{stem}.wav"))
+                            dup_stem = pydub.AudioSegment.from_file(os.path.join(opt.root_data_dir, song, "stems", f"{stem}.wav"))
                             stems[key] = stems[key].overlay(dup_stem, position=0)
                             break
                     if opt.verbose:
