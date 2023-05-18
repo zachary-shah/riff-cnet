@@ -1,4 +1,3 @@
-
 import os, zipfile, glob, argparse
 import numpy as np
 import cv2
@@ -74,7 +73,7 @@ parser.add_argument(
 opt = parser.parse_args()
 
 assert not os.path.exists(opt.root_save_dir)
-assert len(opt.mdl_paths) == len(opt.control_methods)
+assert len(opt.model_paths) == len(opt.control_methods)
 
 if opt.sample_bgnd:
     assert os.path.exists(os.path.join(opt.val_dataset_path, "prompt-fullspec.json"))
@@ -89,7 +88,7 @@ os.makedirs(opt.root_save_dir, exist_ok=False)
 for k, control_method in enumerate(opt.control_methods):
 
     # get new model
-    model = get_model(opt.mdl_paths[k])
+    model = get_model(opt.model_paths[k])
     ddim_sampler = DDIMSampler(model)
     save_dir = os.path.join(opt.root_save_dir,control_method)
     os.makedirs(save_dir, exist_ok=True)
