@@ -1,5 +1,3 @@
-
-
 import os, argparse, json
 import pydub
 import numpy as np
@@ -275,30 +273,30 @@ for song_no, example_dir in enumerate(example_dirs):
         print(f"    Number of valid frames in {opt.gen_stem}: {len(gen_frames)}")
         print(f"    Number of total frames in bgnd: {len(bgnd_frames)}")
 
-    for f in valid_frames:
-        if opt.verbose: print(f"   Frame {f+1}/{len(valid_frames)}")
-        # try:
-        ex_no = 0
+    for fno, f in enumerate(valid_frames):
+        if opt.verbose: print(f"   Frame {fno+1}/{len(valid_frames)}")
+        try:
+            ex_no = 0
 
-        ex_no = make_train_example(gen_frames[f], bgnd_frames[f], prompt, song_no, f, ex_no, opt)
+            ex_no = make_train_example(gen_frames[f], bgnd_frames[f], prompt, song_no, fno, ex_no, opt)
 
-        # modulate through 12 keys
-        if opt.pitch_augment:
-            if opt.verbose: print("    -- Pitch agumenting frame!")
-            # pitch modulation for data augmentation
-            for pitch_offset in [-3, -2, -1, 1, 2, 3]:
-                ex_no = make_train_example(pitch_shift(np.squeeze(gen_frames[f].astype('float')), sr=opt.fs, n_steps=pitch_offset),
-                                           pitch_shift(np.squeeze(bgnd_frames[f].astype('float')), sr=opt.fs, n_steps=pitch_offset),
-                                           prompt,
-                                           song_no, 
-                                           f, 
-                                           ex_no, 
-                                           opt)
+            # modulate through 12 keys
+            if opt.pitch_augment:
+                if opt.verbose: print("    -- Pitch agumenting frame!")
+                # pitch modulation for data augmentation
+                for pitch_offset in [-3, -2, -1, 1, 2, 3]:
+                    ex_no = make_train_example(pitch_shift(np.squeeze(gen_frames[f].astype('float')), sr=opt.fs, n_steps=pitch_offset),
+                                            pitch_shift(np.squeeze(bgnd_frames[f].astype('float')), sr=opt.fs, n_steps=pitch_offset),
+                                            prompt,
+                                            song_no, 
+                                            fno, 
+                                            ex_no, 
+                                            opt)
 
-        num_examples_total += ex_no
-        if num_examples_total >= opt.max_examples: break
-        # except:
-        #     print(f"      -- WARNING: error making example for frame {f} -- ")
+            num_examples_total += ex_no
+            if num_examples_total >= opt.max_examples: break
+        except:
+            print(f"      -- WARNING: error making example for frame {f} -- ")
 
     if num_examples_total >= opt.max_examples:
         print(f"Max example count reached, terminating processing.") 
