@@ -188,7 +188,6 @@ def get_audio_seg(filepath):
     assert seg.frame_rate == opt.fs
     return seg
          
-
 # tracking
 num_examples_total = 0
 time_start = time()
@@ -229,9 +228,6 @@ if opt.save_wav: os.makedirs(os.path.join(opt.data_root, 'wav'), exist_ok=True)
 
 # data folder
 example_dirs = sorted([f for f in os.listdir(opt.root_data_dir) if f != '.DS_Store'])
-
-# TODO: just for prototyping; remove later
-example_dirs = example_dirs[:2]
 
 for song_no, example_dir in enumerate(example_dirs):
 
