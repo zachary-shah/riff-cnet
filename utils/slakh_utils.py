@@ -95,7 +95,8 @@ def get_stem_frames(segment: pydub.AudioSegment,
                     fs: int = 44100)-> dict:
     
     # get samples and time vec as numpy array
-    samples = np.frombuffer(segment.raw_data, dtype=np.int16)
+    samples = np.array(segment.get_array_of_samples())
+    #samples = np.frombuffer(segment.raw_data, dtype=np.int16)
 
     # get power for samples 
     stem_power = np.mean(np.square(samples[(samples != 0)]))
