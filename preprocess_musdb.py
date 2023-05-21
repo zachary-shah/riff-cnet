@@ -7,7 +7,7 @@ from librosa.effects import pitch_shift
 
 from utils.riffusion_utils import audio_array_to_image
 from cnet_riff_preprocessing import append_to_prompt_file, generate_and_save_control
-from utils.slakh_utils import get_stem_frames, make_slakh_prompt
+from utils.slakh_utils import get_stem_frames
 from utils.audio_segment_utils import write_wav_file
 
 parser = argparse.ArgumentParser()
