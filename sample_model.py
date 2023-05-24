@@ -99,6 +99,7 @@ for k, control_method in enumerate(opt.control_methods):
     val_dataset = CnetRiffDataset(opt.val_dataset_path, promptfile="prompt-"+control_method+".json")
 
     print(f"{control_method} model loaded!")
+    n_samples = 0
 
     for i, item in enumerate(val_dataset):
         if i % opt.skip_factor == 0:
@@ -142,7 +143,9 @@ for k, control_method in enumerate(opt.control_methods):
             out_audio_recon = img_converter_to_audio.audio_from_spectrogram_image(target_img, apply_filters=True).set_channels(2)
             out_audio_recon.export(os.path.join(save_dir,f"{item['txt']}_target.wav"), format="wav") 
 
-            if i >= opt.max_examples - 1:
+            n_samples += 1
+
+            if n_samples >= opt.max_examples - 1:
                 break
 
     del model
