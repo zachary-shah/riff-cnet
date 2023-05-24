@@ -67,18 +67,13 @@ parser.add_argument(
     type=bool,
     nargs="?",
     default=False,
-    help="True to get samples of background audio for each example. This requires val_dataset to have fullspec data."
+    help="True to get samples of background audio for each example. This requires val_dataset to have subfolder titled \"bgnd\" which has all the sample backgrounds saved to it."
 ) 
 
 opt = parser.parse_args()
 
 assert not os.path.exists(opt.root_save_dir)
 assert len(opt.model_paths) == len(opt.control_methods)
-
-if opt.sample_bgnd:
-    assert os.path.exists(os.path.join(opt.val_dataset_path, "prompt-fullspec.json"))
-    # if we have fullspectrogram version too, generate background image/audio for each example
-    val_dataset_fullspec = CnetRiffDataset(opt.val_dataset_path, promptfile="prompt-fullspec.json")
 
 img_converter_to_audio = SpectrogramImageConverter(SpectrogramParams(sample_rate=44100, min_frequency=0, max_frequency=10000))
 
@@ -124,13 +119,13 @@ for k, control_method in enumerate(opt.control_methods):
         cv2.imwrite(os.path.join(save_dir,f"{item['txt']}_source.png"), source)
 
         if opt.sample_bgnd:
-            # save bgnd image and audio from fullspec if possible
-            item_fullspec = val_dataset_fullspec[i]
-            bgnd = item_fullspec['hint']
-            cv2.imwrite(os.path.join(save_dir,f"{item_fullspec['txt']}_bgnd.png"), bgnd)
-            bgnd_img = Image.open(os.path.join(save_dir,f"{item_fullspec['txt']}_bgnd.png")) 
+            # save bgnd image and audio if possible
+            bgnd_path = item['name'].replace("target", "bgnd")
+            bgnd = cv2.imread(bgnd_path)
+            cv2.imwrite(os.path.join(save_dir,f"{item['txt']}_bgnd.png"), bgnd)
+            bgnd_img = Image.open(os.path.join(save_dir,f"{item['txt']}_bgnd.png")) 
             out_audio_recon = img_converter_to_audio.audio_from_spectrogram_image(bgnd_img, apply_filters=True).set_channels(2)
-            out_audio_recon.export(os.path.join(save_dir,f"{item_fullspec['txt']}_bgnd.wav"), format="wav") 
+            out_audio_recon.export(os.path.join(save_dir,f"{item['txt']}_bgnd.wav"), format="wav") 
 
         # save target too
         target = (item['jpg'] + 1) / 2 * 255
