@@ -56,6 +56,13 @@ parser.add_argument(
     help="max number of samples to generate data for"
 ) 
 parser.add_argument(
+    "--skip_factor",
+    type=int,
+    nargs="?",
+    default=1,
+    help="skip over val samples in sample iterations."
+) 
+parser.add_argument(
     "--zip_data",
     type=bool,
     nargs="?",
@@ -94,48 +101,49 @@ for k, control_method in enumerate(opt.control_methods):
     print(f"{control_method} model loaded!")
 
     for i, item in enumerate(val_dataset):
-        # only sample a subset, like around 15 or so samples should be good
-        print(f"Sampling for prompt: {item['txt']}")
-        results, _ = sample_ddim(item['hint'], 
-                                item['txt'], 
-                                model, 
-                                ddim_sampler, 
-                                num_samples=opt.num_samples, 
-                                control_lims=[0.0,1.0])
+        if i % opt.skip_factor == 0:
+            # only sample a subset, like around 15 or so samples should be good
+            print(f"Sampling for prompt: {item['txt']}")
+            results, _ = sample_ddim(item['hint'], 
+                                    item['txt'], 
+                                    model, 
+                                    ddim_sampler, 
+                                    num_samples=opt.num_samples, 
+                                    control_lims=[0.0,1.0])
 
-        for (k, sample) in enumerate(results):
-            # save each sample spectrogram
-            cv2.imwrite(os.path.join(save_dir,f"{item['txt']}_samp_{k}.png"), sample)
-            # save each sample audio
-            sample_img = Image.open(os.path.join(save_dir,f"{item['txt']}_samp_{k}.png"))
-            out_audio_recon = img_converter_to_audio.audio_from_spectrogram_image(sample_img, apply_filters=True).set_channels(2)
-            out_audio_recon.export(os.path.join(save_dir,f"{item['txt']}_samp_{k}.wav"), format="wav")
+            for (k, sample) in enumerate(results):
+                # save each sample spectrogram
+                cv2.imwrite(os.path.join(save_dir,f"{item['txt']}_samp_{k}.png"), sample)
+                # save each sample audio
+                sample_img = Image.open(os.path.join(save_dir,f"{item['txt']}_samp_{k}.png"))
+                out_audio_recon = img_converter_to_audio.audio_from_spectrogram_image(sample_img, apply_filters=True).set_channels(2)
+                out_audio_recon.export(os.path.join(save_dir,f"{item['txt']}_samp_{k}.wav"), format="wav")
 
-        # save source for reference
-        source = item['hint']
-        if (np.max(source) <= 1) and (np.min(source) >= 0):
-            print("switching control scale from [0.,1.] to [0,255]")
-            source = np.uint8(source  * 255)
-        cv2.imwrite(os.path.join(save_dir,f"{item['txt']}_source.png"), source)
+            # save source for reference
+            source = item['hint']
+            if (np.max(source) <= 1) and (np.min(source) >= 0):
+                print("switching control scale from [0.,1.] to [0,255]")
+                source = np.uint8(source  * 255)
+            cv2.imwrite(os.path.join(save_dir,f"{item['txt']}_source.png"), source)
 
-        if opt.sample_bgnd:
-            # save bgnd image and audio if possible
-            bgnd_path = item['name'].replace("target", "bgnd")
-            bgnd = cv2.imread(bgnd_path)
-            cv2.imwrite(os.path.join(save_dir,f"{item['txt']}_bgnd.png"), bgnd)
-            bgnd_img = Image.open(os.path.join(save_dir,f"{item['txt']}_bgnd.png")) 
-            out_audio_recon = img_converter_to_audio.audio_from_spectrogram_image(bgnd_img, apply_filters=True).set_channels(2)
-            out_audio_recon.export(os.path.join(save_dir,f"{item['txt']}_bgnd.wav"), format="wav") 
+            if opt.sample_bgnd:
+                # save bgnd image and audio if possible
+                bgnd_path = item['name'].replace("target", "bgnd")
+                bgnd = cv2.imread(bgnd_path)
+                cv2.imwrite(os.path.join(save_dir,f"{item['txt']}_bgnd.png"), bgnd)
+                bgnd_img = Image.open(os.path.join(save_dir,f"{item['txt']}_bgnd.png")) 
+                out_audio_recon = img_converter_to_audio.audio_from_spectrogram_image(bgnd_img, apply_filters=True).set_channels(2)
+                out_audio_recon.export(os.path.join(save_dir,f"{item['txt']}_bgnd.wav"), format="wav") 
 
-        # save target too
-        target = (item['jpg'] + 1) / 2 * 255
-        cv2.imwrite(os.path.join(save_dir,f"{item['txt']}_target.png"), target)
-        target_img = Image.open(os.path.join(save_dir,f"{item['txt']}_target.png")) 
-        out_audio_recon = img_converter_to_audio.audio_from_spectrogram_image(target_img, apply_filters=True).set_channels(2)
-        out_audio_recon.export(os.path.join(save_dir,f"{item['txt']}_target.wav"), format="wav") 
+            # save target too
+            target = (item['jpg'] + 1) / 2 * 255
+            cv2.imwrite(os.path.join(save_dir,f"{item['txt']}_target.png"), target)
+            target_img = Image.open(os.path.join(save_dir,f"{item['txt']}_target.png")) 
+            out_audio_recon = img_converter_to_audio.audio_from_spectrogram_image(target_img, apply_filters=True).set_channels(2)
+            out_audio_recon.export(os.path.join(save_dir,f"{item['txt']}_target.wav"), format="wav") 
 
-        if i >= opt.max_examples - 1:
-            break
+            if i >= opt.max_examples - 1:
+                break
 
     del model
     del ddim_sampler
